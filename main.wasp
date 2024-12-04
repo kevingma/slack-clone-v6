@@ -1,0 +1,60 @@
+app cursorTemplate {
+  wasp: {
+    version: "^0.15.0"
+  },
+  title: "Wasp Cursor IDE Template",
+  client: {
+    rootComponent: import { Main } from "@src/client/Main.tsx",
+  },
+  auth: {
+    userEntity: User,
+    methods: {
+      usernameAndPassword: {},
+      // google: {}
+      // emailAndPassword: {}
+    },
+    onAuthFailedRedirectTo: "/login"
+  },
+}
+
+//#region Auth
+route LoginRoute { path: "/login", to: LoginPage }
+page LoginPage {
+  authRequired: false,
+  component: import { LoginPage } from "@src/auth/LoginPage.tsx"
+}
+
+route SignupRoute { path: "/signup", to: SignupPage }
+page SignupPage {
+  authRequired: false,
+  component: import { SignupPage } from "@src/auth/SignupPage.tsx"
+}
+//#endregion
+
+//#region Example Note Feature
+route ExampleNotesDashboardRoute { path: "/", to: ExampleNotesDashboard }
+page ExampleNotesDashboard {
+  component: import { ExampleNotesDashboard } from "@src/exampleNotesFeature/ExampleNotesDashboard.tsx"
+}
+
+route ExampleNoteRoute { path: "/example-note/:id", to: ExampleNotePage }
+page ExampleNotePage {
+  authRequired: true,
+  component: import { ExampleNotePage } from "@src/exampleNotesFeature/ExampleNotePage.tsx"
+}
+
+query getExampleNote {
+  fn: import { getExampleNote } from "@src/exampleNotesFeature/operations.ts",
+  entities: [ExampleNote]
+}
+
+query getExampleNotes {
+  fn: import { getExampleNotes } from "@src/exampleNotesFeature/operations.ts",
+  entities: [ExampleNote]
+}
+
+action createExampleNote {
+  fn: import { createExampleNote } from "@src/exampleNotesFeature/operations.ts",
+  entities: [ExampleNote]
+}
+//#endregion
