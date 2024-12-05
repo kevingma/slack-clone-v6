@@ -1,12 +1,12 @@
 import type { FC, FormEvent } from 'react';
 
 import { useState } from 'react';
+import { Link } from 'wasp/client/router';
+import { useAuth } from 'wasp/client/auth';
 import { useNavigate } from 'react-router-dom';
 import { TemplateHero } from '../client/components/templateHero';
-import { ContainerWithFlatShadow } from '../client/components/containerWithFlatShadow';
 import { createExampleNote, useQuery, getExampleNotes } from 'wasp/client/operations';
-import { useAuth } from 'wasp/client/auth';
-import { Link } from 'wasp/client/router';
+import { ContainerWithFlatShadow } from '../client/components/containerWithFlatShadow';
 
 export const ExampleNotesDashboard: FC = () => {
   const navigate = useNavigate();
@@ -17,6 +17,10 @@ export const ExampleNotesDashboard: FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!title || !content) {
+      alert('Please enter a title and content');
+      return;
+    }
     try {
       await createExampleNote({ title, content });
       setTitle('');
@@ -56,12 +60,16 @@ export const ExampleNotesDashboard: FC = () => {
             </Link>
           </div>
         )}
+
         {user && notes && (
           <div className='space-y-4'>
             {notes.length === 0 && <div className='text-gray-600'>No notes created yet....</div>}
             {notes.map((note) => (
-              <div key={note.id} onClick={() => handleNoteClick(note.id)} className='p-4 border bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors'>
-                <h3 className='font-bold'>{note.title}</h3>
+              <div key={note.id} onClick={() => handleNoteClick(note.id)} className='group p-4 border bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors'>
+                <h3 className='font-bold flex items-center gap-1'>
+                  {note.title}
+                  <span className='opacity-10 group-hover:opacity-100 transition-opacity'>→</span>
+                </h3>
                 <p className='text-gray-600'>{note.content}</p>
               </div>
             ))}

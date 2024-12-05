@@ -4,15 +4,15 @@ import { ContainerWithFlatShadow } from './containerWithFlatShadow';
 export const TemplateHero: FC = () => {
   return (
     <ContainerWithFlatShadow shadowColor='rgba(0, 0, 0, 0.1)' bgColor='bg-gray-100'>
-      <h1 className='text-4xl font-bold text-gray-900 mb-4'>Wasp Cursor IDE Template</h1>
-      <p className='text-lg text-gray-800 mb-8'>This is a template to help you build your Wasp app with the Cursor IDE.</p>
+      <h1 className='text-4xl font-bold text-gray-900 mb-2'>Wasp Cursor IDE Template</h1>
+      <p className='text-md text-gray-500 italic mb-6'>This is a template to help you build your Wasp app with the <a href='https://cursor.sh/' target='_blank' className='underline hover:text-yellow-500 transition-colors'>Cursor IDE</a>.</p>
       <div className='space-y-4 font-mono text-gray-600'>
         <p>
-          - Context for the AI to build with the Wasp framework are provided in the <Code>.cursorrules</Code> file. If you find that the AI assistant is making mistakes with regards to Wasp-specific code, you can add
+          - Context for the AI to build with the Wasp framework is provided in the <Code>.cursorrules</Code> file. If you find that the AI assistant is making mistakes with regards to Wasp-specific code, you can add
           more context here.
         </p>
         <p>
-          - Make sure to add the Wasp docs,{' '}
+          - Make sure to index the Wasp docs,{' '}
           <Code>
             <a href='https://wasp-lang.dev/docs' target='_blank' className='underline hover:text-yellow-500 transition-colors'>
               https://wasp-lang.dev/docs

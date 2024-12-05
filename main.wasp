@@ -57,4 +57,14 @@ action createExampleNote {
   fn: import { createExampleNote } from "@src/exampleNotesFeature/operations.ts",
   entities: [ExampleNote]
 }
+
+action updateExampleNote {
+  fn: import { updateExampleNote } from "@src/exampleNotesFeature/operations.ts",
+  entities: [ExampleNote]
+}
+
+action deleteExampleNote {
+  fn: import { deleteExampleNote } from "@src/exampleNotesFeature/operations.ts",
+  entities: [ExampleNote]
+}
 //#endregion

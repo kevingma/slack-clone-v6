@@ -17,9 +17,7 @@ export const Main: FC = () => {
           <div className='flex-1 text-white font-semibold'>Wasp Cursor IDE Template</div>
           <img src={logo} alt='Wasp Logo' className='w-8 h-8' />
           <div className='flex-1 flex justify-end'>
-            {isLoading ? (
-              <div className='text-gray-300'>Loading...</div>
-            ) : user ? (
+            {user ? (
               <div className='flex items-center gap-4'>
                 {username && <span className='text-gray-300'>Welcome, {username.id}</span>}
                 <button onClick={() => logout()} className='text-white hover:text-gray-300 transition-colors'>
