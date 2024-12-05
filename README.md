@@ -5,7 +5,7 @@ This is a template to help you build your Wasp app with the [Cursor IDE](https:/
 ## Getting Started
 
 1. Make sure you have Wasp installed: `curl -sSL https://get.wasp-lang.dev/installer.sh | sh -s`
-2. Run `wasp new -t cursor-template` to fetch the template.
+2. Run `wasp new -t cursor-template` to fetch the template (coming soon. until then, clone the repo).
 3. Position yourself in the project directory: `cd cursor-template`
 4. Run `wasp db start` to start the Postgres database.
 5. In a new terminal, run `wasp db migrate-dev` to migrate the database.
