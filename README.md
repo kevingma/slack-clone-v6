@@ -18,3 +18,7 @@ We've included a `.cursorrules` file that provides context to the Cursor AI so t
 The `.cursorrules` file is our attempt at fixing the common mistakes the AI assistants make while building a Wasp full-stack app, but if you find that the AI is still making mistakes, you can try to add more context to the `.cursorrules` file, or within the Cursor settings.
 
 Also, make sure you have the [Wasp docs](https://wasp-lang.dev/docs) indexed in Cursor. You can do this by going to `preferences > cursor settings > features > add new doc `. Then, you can include them in Cursor chat by using the `@docs` keyword. This often improves the AI's ability to help you with Wasp-specific code.
+
+## Extra help
+
+If you get stuck, you can ask for help on the [Wasp Discord](https://discord.gg/rzdnErX). =}
