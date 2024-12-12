@@ -5,11 +5,12 @@ This is a basic starter template for [Wasp](https://wasp-lang.dev/) apps but wit
 ## Getting Started
 
 1. Make sure you have Wasp installed: `curl -sSL https://get.wasp-lang.dev/installer.sh | sh -s`
-2. Clone this repo: `git clone https://github.com/wasp-lang/cursor-template.git`
-3. Position yourself in the project directory: `cd cursor-template`
-4. Run `wasp db start` to start the Postgres database.
-5. In a new terminal, run `wasp db migrate-dev` to migrate the database.
-6. Run `wasp start` to start the development server.
+2. Create a new repo from this template: [Use the Wasp Cursor Template](https://github.com/wasp-lang/cursor-template/generate)
+3. Clone your new repo: `git clone https://github.com/<your-username>/<your-repo-name>.git`
+4. Position yourself in the project directory: `cd <your-repo-name>`
+5. Run `wasp db start` to start the Postgres database.
+6. In a new terminal, run `wasp db migrate-dev` to migrate the database.
+7. Run `wasp start` to start the development server.
 
 ## How it works with Cursor
 
@@ -29,7 +30,7 @@ In the sections below, we'll go through each directory and explain why we've inc
 src/
 ├── auth/                          // Auth-related files
 ├── client/                        // Client-only components and the Main.tsx app wrapper
-├── exampleNotesFeature/           // Example feature code
+├── exampleNotesFeature/           // Example feature code (for Cursor)
 │   ├── ExampleNotePage.tsx           
 │   ├── ExampleNoteDashboard.tsx      
 │   └── operations.ts              // Example server-side functions 

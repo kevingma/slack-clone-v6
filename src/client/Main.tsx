@@ -29,7 +29,7 @@ export const Main: FC = () => {
             </Link>
             {user ? (
               <div className='flex items-center gap-4'>
-                <button onClick={() => logout()} className={linkStyles}>
+                <button onClick={() => logout()} className='text-white hover:text-gray-300 transition-colors'>
                   Logout, {username && username.id}
                 </button>
               </div>
