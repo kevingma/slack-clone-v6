@@ -10,11 +10,17 @@ app cursorTemplate {
     userEntity: User,
     methods: {
       usernameAndPassword: {},
+      // For more info on using other Auth methods, check out the Wasp Auth docs: https://wasp-lang.dev/docs/auth/overview
       // google: {}
       // emailAndPassword: {}
     },
     onAuthFailedRedirectTo: "/login"
   },
+}
+
+route LandingPageRoute { path: "/", to: LandingPage }
+page LandingPage {
+  component: import { LandingPage } from "@src/client/LandingPage.tsx"
 }
 
 //#region Auth
@@ -32,7 +38,7 @@ page SignupPage {
 //#endregion
 
 //#region Example Note Feature
-route ExampleNotesDashboardRoute { path: "/", to: ExampleNotesDashboard }
+route ExampleNotesDashboardRoute { path: "/example-notes", to: ExampleNotesDashboard }
 page ExampleNotesDashboard {
   component: import { ExampleNotesDashboard } from "@src/exampleNotesFeature/ExampleNotesDashboard.tsx"
 }
