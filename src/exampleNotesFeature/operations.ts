@@ -3,25 +3,6 @@ import type { GetExampleNotes, GetExampleNote, CreateExampleNote, DeleteExampleN
 
 import { HttpError } from 'wasp/server';
 
-type GetExampleNoteInput = {
-  id: number;
-};
-
-type CreateExampleNoteInput = {
-  title: string;
-  content: string;
-};
-
-type UpdateExampleNoteInput = {
-  id: number;
-  title: string;
-  content: string;
-};
-
-type DeleteExampleNoteInput = {
-  id: number;
-};
-
 export const getExampleNotes: GetExampleNotes<void, ExampleNote[]> = async (_args, context) => {
   if (!context.user) {
     throw new HttpError(401, 'User not found');
@@ -31,6 +12,10 @@ export const getExampleNotes: GetExampleNotes<void, ExampleNote[]> = async (_arg
     where: { userId: context.user.id },
     orderBy: { id: 'asc' },
   });
+};
+
+type GetExampleNoteInput = {
+  id: number;
 };
 
 export const getExampleNote: GetExampleNote<GetExampleNoteInput, ExampleNote> = async ({ id }, context) => {
@@ -44,6 +29,11 @@ export const getExampleNote: GetExampleNote<GetExampleNoteInput, ExampleNote> = 
       userId: context.user.id,
     },
   });
+};
+
+type CreateExampleNoteInput = {
+  title: string;
+  content: string;
 };
 
 export const createExampleNote: CreateExampleNote<CreateExampleNoteInput, ExampleNote> = async ({ title, content }, context) => {
@@ -60,6 +50,12 @@ export const createExampleNote: CreateExampleNote<CreateExampleNoteInput, Exampl
   });
 };
 
+type UpdateExampleNoteInput = {
+  id: number;
+  title: string;
+  content: string;
+};
+
 export const updateExampleNote: UpdateExampleNote<UpdateExampleNoteInput, ExampleNote> = async ({ id, title, content }, context) => {
   if (!context.user) {
     throw new HttpError(401, 'User not found');
@@ -69,6 +65,10 @@ export const updateExampleNote: UpdateExampleNote<UpdateExampleNoteInput, Exampl
     where: { id, userId: context.user.id },
     data: { title, content },
   });
+};
+
+type DeleteExampleNoteInput = {
+  id: number;
 };
 
 export const deleteExampleNote: DeleteExampleNote<DeleteExampleNoteInput, ExampleNote> = async ({ id }, context) => {
