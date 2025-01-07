@@ -14,6 +14,10 @@ app SlackCloneV5 {
         configFn: import { googleConfig } from "@src/auth/google.ts",
         userSignupFields: import { googleSignupFields } from "@src/auth/google.ts"
       },
+      gitHub: {
+        configFn: import { githubConfig } from "@src/auth/github.js",
+        userSignupFields: import { githubSignupFields } from "@src/auth/github.js"
+      },
     },
     onAuthFailedRedirectTo: "/login"
   },
