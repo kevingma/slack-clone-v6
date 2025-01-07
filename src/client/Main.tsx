@@ -8,7 +8,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 
 export const Main: FC = () => {
   const { data: user, isLoading } = useAuth();
-  const username = user?.identities.username;
+  const username = user?.username || 'User';
 
   const location = useLocation();
   const currentPath = location.pathname;
@@ -30,7 +30,7 @@ export const Main: FC = () => {
             {user ? (
               <div className='flex items-center gap-4'>
                 <button onClick={() => logout()} className='text-white hover:text-gray-300 transition-colors'>
-                  Logout, {username && username.id}
+                  Logout, {username}
                 </button>
               </div>
             ) : (
