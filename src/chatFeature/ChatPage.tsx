@@ -3,7 +3,8 @@ import {
   useQuery,
   getChatMessages,
   createChatMessage,
-  getChannels
+  getChannels,
+  createChannel
 } from 'wasp/client/operations'
 import { ContainerWithFlatShadow } from '../client/components/containerWithFlatShadow'
 import { useAuth } from 'wasp/client/auth'
@@ -12,7 +13,7 @@ export const ChatPage: FC = () => {
   const { data: user } = useAuth()
 
   // Provide a default value of empty array for channels
-  const { data: channels = [] } = useQuery(getChannels)
+  const { data: channels = [], refetch: refetchChannels } = useQuery(getChannels)
 
   // Track selectedChannelId in state
   const [selectedChannelId, setSelectedChannelId] = useState<number | undefined>(undefined)
@@ -21,18 +22,22 @@ export const ChatPage: FC = () => {
   const {
     data: messages,
     isFetching,
-    refetch
+    refetch: refetchMessages
   } = useQuery(getChatMessages, { channelId: selectedChannelId })
 
   const [content, setContent] = useState('')
 
+  // ----- New state for creating a channel -----
+  const [showNewChannelForm, setShowNewChannelForm] = useState(false)
+  const [newChannelName, setNewChannelName] = useState('')
+
   // Poll for new messages every 2 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      refetch()
+      refetchMessages()
     }, 2000)
     return () => clearInterval(interval)
-  }, [refetch])
+  }, [refetchMessages])
 
   const handleSendMessage = async () => {
     if (!content.trim()) return
@@ -40,7 +45,7 @@ export const ChatPage: FC = () => {
       await createChatMessage({ content, channelId: selectedChannelId })
       setContent('')
       // Immediately refetch so user sees their message
-      refetch()
+      refetchMessages()
     } catch (err: any) {
       window.alert('Error sending message: ' + err.message)
     }
@@ -50,11 +55,49 @@ export const ChatPage: FC = () => {
     setSelectedChannelId(channelId)
   }
 
+  // ----- Handler for creating a new channel -----
+  const handleCreateChannel = async () => {
+    if (!newChannelName.trim()) return
+    try {
+      await createChannel({ name: newChannelName })
+      setNewChannelName('')
+      setShowNewChannelForm(false)
+      refetchChannels()  // refetch so the new channel appears immediately
+    } catch (err: any) {
+      window.alert('Error creating channel: ' + err.message)
+    }
+  }
+
   return (
     <div className='flex'>
       {/* Sidebar */}
       <div className='w-64 bg-gray-200 h-screen p-4'>
-        <h3 className='text-xl font-bold mb-2'>Channels</h3>
+        <div className='flex items-center justify-between mb-4'>
+          <h3 className='text-xl font-bold'>Channels</h3>
+          <button
+            className='bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors'
+            onClick={() => setShowNewChannelForm(!showNewChannelForm)}
+          >
+            New Channel
+          </button>
+        </div>
+        {showNewChannelForm && (
+          <div className='mb-4'>
+            <input
+              type='text'
+              className='border p-1 w-full mb-2'
+              placeholder='Channel name'
+              value={newChannelName}
+              onChange={(e) => setNewChannelName(e.target.value)}
+            />
+            <button
+              className='bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors w-full'
+              onClick={handleCreateChannel}
+            >
+              Create Channel
+            </button>
+          </div>
+        )}
         <ul className='space-y-2'>
           {channels.map(channel => (
             <li

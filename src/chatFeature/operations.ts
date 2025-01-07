@@ -103,21 +103,26 @@ type CreateChannelInput = {
   name: string
 }
 export const createChannel: CreateChannel<CreateChannelInput, Channel> = async ({ name }, context) => {
-  if (!context.user) {
-    throw new HttpError(401, 'User not found')
-  }
-
-  const existingChannel = await context.entities.Channel.findFirst({ where: { name } })
-  if (existingChannel) {
-    throw new HttpError(400, 'Channel already exists')
-  }
-
-  return context.entities.Channel.create({
-    data: {
-      name
+    if (!context.user) {
+      throw new HttpError(401, 'User not found')
     }
-  })
-}
+  
+    // Prepend '#' to the channel name if not already present
+    const channelName = name.startsWith('#') ? name : `#${name}`
+  
+    const existingChannel = await context.entities.Channel.findFirst({
+      where: { name: channelName }
+    })
+    if (existingChannel) {
+      throw new HttpError(400, 'Channel already exists')
+    }
+  
+    return context.entities.Channel.create({
+      data: {
+        name: channelName
+      }
+    })
+  }
 
 // Delete a channel
 type DeleteChannelInput = {

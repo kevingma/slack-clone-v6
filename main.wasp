@@ -66,14 +66,16 @@ query getChannels {
   entities: [Channel]
 }
 
+// Add `User` here so we can safely reference context.user in createChannel
 action createChannel {
   fn: import { createChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel]
+  entities: [Channel, User]
 }
 
-// Deleting a channel also deletes its ChatMessages, so ChatMessage must be included
+// Deleting a channel also deletes its ChatMessages, 
+// and we also need `User` to check if the request is coming from an authenticated user.
 action deleteChannel {
   fn: import { deleteChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, ChatMessage]
+  entities: [Channel, ChatMessage, User]
 }
 //#endregion
