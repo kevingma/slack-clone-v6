@@ -1,17 +1,20 @@
-import type { ChatMessage } from 'wasp/entities'
+import type { ChatMessage, User } from 'wasp/entities'
 import type {
   GetChatMessages,
   CreateChatMessage
 } from 'wasp/server/operations'
 import { HttpError } from 'wasp/server'
 
-// Return all messages, newest last
-export const getChatMessages: GetChatMessages<void, ChatMessage[]> = async (_args, context) => {
+type ChatMessageWithUser = ChatMessage & { user: User }
+
+// Return all messages, newest last, including user relation
+export const getChatMessages: GetChatMessages<void, ChatMessageWithUser[]> = async (_args, context) => {
   if (!context.user) {
     throw new HttpError(401, 'User not found')
   }
-  // Return all chat messages from all users
+  // Return all chat messages, including the user relation so msg.user exists
   return context.entities.ChatMessage.findMany({
+    include: { user: true },
     orderBy: { id: 'asc' }
   })
 }
