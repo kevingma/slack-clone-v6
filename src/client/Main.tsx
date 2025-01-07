@@ -20,7 +20,7 @@ export const Main: FC = () => {
       <nav className='bg-gray-800 p-4'>
         <div className='container mx-auto flex justify-between items-center'>
           <Link to='/' className='flex-1 font-semibold text-yellow-300 hover:text-gray-300 transition-color'>
-            Wasp Cursor IDE Template
+            Slack Clone v5
           </Link>
           <img src={logo} alt='Wasp Logo' className='w-8 h-8' />
           <div className='flex-1 flex justify-end gap-6'>

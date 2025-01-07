@@ -11,14 +11,13 @@ app SlackCloneV5 {
     methods: {
       usernameAndPassword: {},
       google: {
-        // Added config block with scopes ensuring we get the user's email.
-        config: {
-          scope: ["openid", "profile", "email"]
-        }
+        // 1. Reference our custom config and userSignupFields
+        configFn: import { googleConfig } from "@src/auth/google.ts",
+        userSignupFields: import { googleSignupFields } from "@src/auth/google.ts"
       },
     },
     onAuthFailedRedirectTo: "/login"
-  }
+  },
 }
 
 // Landing page
@@ -40,10 +39,6 @@ page SignupPage {
   component: import { SignupPage } from "@src/auth/SignupPage.tsx"
 }
 //#endregion
-
-/* 
-  Removed the entire Example Notes Feature section here 
-*/
 
 //#region Chat Feature
 route ChatPageRoute { path: "/chat", to: ChatPage }
