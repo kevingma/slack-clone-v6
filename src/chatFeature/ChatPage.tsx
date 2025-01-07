@@ -36,7 +36,7 @@ export const ChatPage: FC = () => {
         {messages?.map(msg => (
           <div key={msg.id} className='mb-4'>
             <div className='text-sm text-gray-700 font-semibold mb-1'>
-              {msg.user?.identities.username?.id ?? 'Unknown User'}
+              {msg.user?.username ?? msg.user?.email ?? 'Unknown User'}
             </div>
             <div className='bg-white p-2 border border-gray-200'>
               {msg.content}
