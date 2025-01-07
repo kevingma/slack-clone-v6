@@ -1,8 +1,8 @@
-app cursorTemplate {
+app SlackCloneV5 {
   wasp: {
     version: "^0.15.0"
   },
-  title: "Wasp Cursor IDE Template",
+  title: "Slack Clone v5",
   client: {
     rootComponent: import { Main } from "@src/client/Main.tsx",
   },

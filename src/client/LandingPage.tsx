@@ -9,6 +9,8 @@ export const LandingPage: FC = () => {
     <>
       <TemplateHero />
       <ContainerWithFlatShadow>
+        {/* Debug heading to confirm the page is visible */}
+        <h1 className='mb-4 text-lg font-bold'>Landing Page Loaded Successfully!</h1>
         <div className='flex justify-between items-center'>
           <Link to='/chat' className='group flex items-center justify-center gap-1 px-4 py-2 bg-gray-100 border border-gray-200 text-black ring-1 ring-yellow-500 hover:ring-2'>
             Go To Chat
