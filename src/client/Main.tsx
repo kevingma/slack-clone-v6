@@ -7,13 +7,13 @@ import { logout, useAuth } from 'wasp/client/auth';
 import { Outlet, useLocation } from 'react-router-dom';
 
 export const Main: FC = () => {
-  const { data: user, isLoading } = useAuth(); // We have to get the user from the useAuth hook because it's not passed in as a prop to the Main component by Wasp.
+  const { data: user, isLoading } = useAuth();
   const username = user?.identities.username;
 
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isExampleNotesPage = currentPath === routes.ExampleNotesDashboardRoute.to;
+  const isChatPage = currentPath === '/chat';
 
   return (
     <div className='min-h-screen flex flex-col'>
@@ -24,8 +24,8 @@ export const Main: FC = () => {
           </Link>
           <img src={logo} alt='Wasp Logo' className='w-8 h-8' />
           <div className='flex-1 flex justify-end gap-6'>
-            <Link to='/example-notes' className={`hover:text-gray-300 transition-colors ${!isExampleNotesPage ? 'text-yellow-300' : 'text-white'}`}>
-              Example Notes Feature
+            <Link to='/chat' className={`hover:text-gray-300 transition-colors ${!isChatPage ? 'text-yellow-300' : 'text-white'}`}>
+              Chat
             </Link>
             {user ? (
               <div className='flex items-center gap-4'>

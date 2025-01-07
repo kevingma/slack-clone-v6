@@ -10,14 +10,13 @@ app cursorTemplate {
     userEntity: User,
     methods: {
       usernameAndPassword: {},
-      // For more info on using other Auth methods, check out the Wasp Auth docs: https://wasp-lang.dev/docs/auth/overview
-      // google: {}
-      // emailAndPassword: {}
+      google: {},
     },
     onAuthFailedRedirectTo: "/login"
   },
 }
 
+// Landing page
 route LandingPageRoute { path: "/", to: LandingPage }
 page LandingPage {
   component: import { LandingPage } from "@src/client/LandingPage.tsx"
@@ -37,40 +36,24 @@ page SignupPage {
 }
 //#endregion
 
-//#region Example Note Feature
-route ExampleNotesDashboardRoute { path: "/example-notes", to: ExampleNotesDashboard }
-page ExampleNotesDashboard {
-  component: import { ExampleNotesDashboard } from "@src/exampleNotesFeature/ExampleNotesDashboard.tsx"
-}
+/* 
+  Removed the entire Example Notes Feature section here 
+*/
 
-route ExampleNoteRoute { path: "/example-note/:id", to: ExampleNotePage }
-page ExampleNotePage {
+//#region Chat Feature
+route ChatPageRoute { path: "/chat", to: ChatPage }
+page ChatPage {
   authRequired: true,
-  component: import { ExampleNotePage } from "@src/exampleNotesFeature/ExampleNotePage.tsx"
+  component: import { ChatPage } from "@src/chatFeature/ChatPage.tsx"
 }
 
-query getExampleNote {
-  fn: import { getExampleNote } from "@src/exampleNotesFeature/operations.ts",
-  entities: [ExampleNote]
+query getChatMessages {
+  fn: import { getChatMessages } from "@src/chatFeature/operations.ts",
+  entities: [ChatMessage]
 }
 
-query getExampleNotes {
-  fn: import { getExampleNotes } from "@src/exampleNotesFeature/operations.ts",
-  entities: [ExampleNote]
-}
-
-action createExampleNote {
-  fn: import { createExampleNote } from "@src/exampleNotesFeature/operations.ts",
-  entities: [ExampleNote]
-}
-
-action updateExampleNote {
-  fn: import { updateExampleNote } from "@src/exampleNotesFeature/operations.ts",
-  entities: [ExampleNote]
-}
-
-action deleteExampleNote {
-  fn: import { deleteExampleNote } from "@src/exampleNotesFeature/operations.ts",
-  entities: [ExampleNote]
+action createChatMessage {
+  fn: import { createChatMessage } from "@src/chatFeature/operations.ts",
+  entities: [ChatMessage]
 }
 //#endregion

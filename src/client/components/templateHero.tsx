@@ -30,13 +30,13 @@ export const TemplateHero: FC = () => {
           and access them with the <Code>{`@docs`}</Code> keyword in Cursor chat.
         </p>
         <p>
-          - We've provided some example feature code for you in{' '}
-          <Link to='/example-notes'>
+          - We've provided a chat feature for you in{' '}
+          <Link to='/chat'>
             <Code>
-              <span className={codeLinkStyles}>src/exampleNotesFeature/</span>
+              <span className={codeLinkStyles}>src/chatFeature/</span>
             </Code>
           </Link>
-          . You can leave this code in place to help guide the AI in building the rest of your app, and delete it once you've got your own code in place.
+          . You can use this as an example to help guide you in building the rest of your app.
         </p>
       </div>
     </ContainerWithFlatShadow>
