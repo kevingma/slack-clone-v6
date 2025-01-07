@@ -10,10 +10,15 @@ app SlackCloneV5 {
     userEntity: User,
     methods: {
       usernameAndPassword: {},
-      google: {},
+      google: {
+        // Added config block with scopes ensuring we get the user's email.
+        config: {
+          scope: ["openid", "profile", "email"]
+        }
+      },
     },
     onAuthFailedRedirectTo: "/login"
-  },
+  }
 }
 
 // Landing page
