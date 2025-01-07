@@ -1,19 +1,45 @@
-import type { ChatMessage, User } from 'wasp/entities'
+import type { ChatMessage, User, Channel } from 'wasp/entities'
 import type {
   GetChatMessages,
-  CreateChatMessage
+  CreateChatMessage,
+  GetChannels,
+  CreateChannel,
+  DeleteChannel
 } from 'wasp/server/operations'
 import { HttpError } from 'wasp/server'
 
 type ChatMessageWithUser = ChatMessage & { user: User }
 
-// Return all messages, newest last, including user relation
-export const getChatMessages: GetChatMessages<void, ChatMessageWithUser[]> = async (_args, context) => {
+// Return all messages in a specific channel, newest last
+// We'll assume 'general' channel if channelId isn't passed.
+type GetChatMessagesArgs = {
+  channelId?: number
+}
+export const getChatMessages: GetChatMessages<GetChatMessagesArgs, ChatMessageWithUser[]> = async ({ channelId }, context) => {
   if (!context.user) {
     throw new HttpError(401, 'User not found')
   }
-  // Return all chat messages, including the user relation so msg.user exists
+
+  // If no channelId provided, find or create a #general channel
+  let channel = null
+  if (!channelId) {
+    channel = await context.entities.Channel.findFirst({ where: { name: '#general' } })
+    if (!channel) {
+      channel = await context.entities.Channel.create({
+        data: {
+          name: '#general'
+        }
+      })
+    }
+  } else {
+    channel = await context.entities.Channel.findUnique({ where: { id: channelId } })
+    if (!channel) {
+      throw new HttpError(404, 'Channel not found')
+    }
+  }
+
   return context.entities.ChatMessage.findMany({
+    where: { channelId: channel.id },
     include: { user: true },
     orderBy: { id: 'asc' }
   })
@@ -21,21 +47,101 @@ export const getChatMessages: GetChatMessages<void, ChatMessageWithUser[]> = asy
 
 type CreateChatMessageInput = {
   content: string
+  channelId?: number
 }
 
+// Create a new message in a specific channel
 export const createChatMessage: CreateChatMessage<CreateChatMessageInput, ChatMessage> = async (
-  { content },
+  { content, channelId },
   context
 ) => {
   if (!context.user) {
     throw new HttpError(401, 'User not found')
   }
 
-  // Create a new chat message
+  // If no channelId is provided, assume #general.
+  let channel = null
+  if (!channelId) {
+    channel = await context.entities.Channel.findFirst({ where: { name: '#general' } })
+    if (!channel) {
+      channel = await context.entities.Channel.create({
+        data: {
+          name: '#general'
+        }
+      })
+    }
+  } else {
+    channel = await context.entities.Channel.findUnique({ where: { id: channelId } })
+    if (!channel) {
+      throw new HttpError(404, 'Channel not found')
+    }
+  }
+
   return context.entities.ChatMessage.create({
     data: {
       content,
-      userId: context.user.id
+      userId: context.user.id,
+      channelId: channel.id
     }
+  })
+}
+
+// =============== Channel operations ===============
+
+// Get all channels
+export const getChannels: GetChannels<void, Channel[]> = async (_args, context) => {
+  if (!context.user) {
+    throw new HttpError(401, 'User not found')
+  }
+  return context.entities.Channel.findMany({
+    orderBy: { name: 'asc' }
+  })
+}
+
+// Create a new channel
+type CreateChannelInput = {
+  name: string
+}
+export const createChannel: CreateChannel<CreateChannelInput, Channel> = async ({ name }, context) => {
+  if (!context.user) {
+    throw new HttpError(401, 'User not found')
+  }
+
+  const existingChannel = await context.entities.Channel.findFirst({ where: { name } })
+  if (existingChannel) {
+    throw new HttpError(400, 'Channel already exists')
+  }
+
+  return context.entities.Channel.create({
+    data: {
+      name
+    }
+  })
+}
+
+// Delete a channel
+type DeleteChannelInput = {
+  channelId: number
+}
+export const deleteChannel: DeleteChannel<DeleteChannelInput, Channel> = async ({ channelId }, context) => {
+  if (!context.user) {
+    throw new HttpError(401, 'User not found')
+  }
+
+  // For safety, disallow deleting #general channel
+  const channel = await context.entities.Channel.findUnique({ where: { id: channelId } })
+  if (!channel) {
+    throw new HttpError(404, 'Channel not found')
+  }
+  if (channel.name === '#general') {
+    throw new HttpError(400, "Cannot delete the #general channel.")
+  }
+
+  // Delete messages first or rely on cascade if set in DB
+  // Prisma requires onDelete: CASCADE at the DB level or manual deletion
+  await context.entities.ChatMessage.deleteMany({ where: { channelId } })
+
+  return context.entities.Channel.delete({
+    where: { id: channelId }
   })
 }

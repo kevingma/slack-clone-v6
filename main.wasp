@@ -11,7 +11,6 @@ app SlackCloneV5 {
     methods: {
       usernameAndPassword: {},
       google: {
-        // 1. Reference our custom config and userSignupFields
         configFn: import { googleConfig } from "@src/auth/google.ts",
         userSignupFields: import { googleSignupFields } from "@src/auth/google.ts"
       },
@@ -47,13 +46,30 @@ page ChatPage {
   component: import { ChatPage } from "@src/chatFeature/ChatPage.tsx"
 }
 
+// Include both ChatMessage and User so we can reference them in the operations
 query getChatMessages {
   fn: import { getChatMessages } from "@src/chatFeature/operations.ts",
-  entities: [ChatMessage]
+  entities: [ChatMessage, Channel, User]
 }
 
 action createChatMessage {
   fn: import { createChatMessage } from "@src/chatFeature/operations.ts",
-  entities: [ChatMessage]
+  entities: [ChatMessage, Channel, User]
+}
+
+query getChannels {
+  fn: import { getChannels } from "@src/chatFeature/operations.ts",
+  entities: [Channel]
+}
+
+action createChannel {
+  fn: import { createChannel } from "@src/chatFeature/operations.ts",
+  entities: [Channel]
+}
+
+// Deleting a channel also deletes its ChatMessages, so ChatMessage must be included
+action deleteChannel {
+  fn: import { deleteChannel } from "@src/chatFeature/operations.ts",
+  entities: [Channel, ChatMessage]
 }
 //#endregion
