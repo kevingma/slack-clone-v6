@@ -8,7 +8,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 
 export const Main: FC = () => {
   const { data: user, isLoading } = useAuth()
-  const username = user?.username || 'User'
+  const username = user?.id || 'User'
 
   const location = useLocation()
   const currentPath = location.pathname
