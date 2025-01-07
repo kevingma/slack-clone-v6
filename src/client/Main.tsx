@@ -13,7 +13,8 @@ export const Main: FC = () => {
   const isChatPage = currentPath === '/chat'
 
   return (
-    <div className='min-h-screen flex flex-col'>
+    // Changed from 'min-h-screen' to 'h-screen' 
+    <div className='h-screen flex flex-col'>
       <nav className='bg-gray-800 p-4'>
         <div className='container mx-auto flex items-center'>
           {/* Logo on the far left */}
@@ -57,7 +58,8 @@ export const Main: FC = () => {
         </div>
       </nav>
 
-      <main className='flex-1'>
+      {/* Make the main area take up remaining vertical space and prevent overflow */}
+      <main className='flex-1 flex overflow-hidden'>
         <Outlet />
       </main>
     </div>
