@@ -34,14 +34,23 @@ model WorkspaceUser {
 }
 
 model Channel {
-  id           Int           @id @default(autoincrement())
+  id           Int                  @id @default(autoincrement())
   name         String
-  createdAt    DateTime      @default(now())
+  createdAt    DateTime             @default(now())
   chatMessages ChatMessage[]
-  // Reference the Workspace
-  // Make this optional for now so the migration won't fail on existing rows
   workspaceId  Int?
-  workspace    Workspace?     @relation(fields: [workspaceId], references: [id])
+  workspace    Workspace?           @relation(fields: [workspaceId], references: [id])
+  // New fields below:
+  isDm         Boolean              @default(false)
+  participants ChannelParticipant[]
+}
+
+model ChannelParticipant {
+  id        Int      @id @default(autoincrement())
+  channelId Int
+  userId    Int
+  channel   Channel  @relation(fields: [channelId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model ChatMessage {
@@ -50,7 +59,6 @@ model ChatMessage {
   createdAt DateTime @default(now())
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
-
   channelId Int?
   channel   Channel? @relation(fields: [channelId], references: [id])
 }
