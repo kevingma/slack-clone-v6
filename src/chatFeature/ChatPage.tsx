@@ -179,14 +179,36 @@ export const ChatPage: FC = () => {
           </h2>
         </div>
         <div className='flex-1 overflow-y-auto bg-gray-50 p-4'>
-          {/* Removed conditional "Loading..." text here */}
           {messages?.map(msg => (
-            <div key={msg.id} className='mb-4'>
-              <div className='text-sm text-gray-700 font-semibold mb-1'>
-                {(msg.user as any)?.displayName ?? msg.user?.email ?? 'Unknown User'}
-              </div>
-              <div className='bg-white p-2 border border-gray-200'>
-                {msg.content}
+            <div key={msg.id} className='flex items-start mb-4'>
+              {/* Avatar + Hover info */}
+              <div className='relative group mr-3'>
+                <img
+                    src='https://placehold.co/32x32'
+                    alt='User Avatar'
+                    className='w-8 h-8 rounded-full cursor-pointer'
+                />
+                <div
+                    className='absolute top-0 left-10 hidden group-hover:block bg-white p-2 border border-gray-200 shadow-md
+                            pointer-events-none group-hover:pointer-events-auto'
+                >
+                    <p className='text-sm mb-2'>@{msg.user?.username || 'Unknown'}</p>
+                    <button
+                    className='px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors'
+                    onClick={() => {}}
+                    >
+                    Send DM
+                    </button>
+                </div>
+            </div>
+              {/* Message content */}
+              <div>
+                <div className='text-sm text-gray-700 font-semibold mb-1'>
+                  {(msg.user as any)?.displayName ?? msg.user?.email ?? 'Unknown User'}
+                </div>
+                <div className='bg-white p-2 border border-gray-200'>
+                  {msg.content}
+                </div>
               </div>
             </div>
           ))}
