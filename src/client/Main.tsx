@@ -2,66 +2,71 @@ import type { FC } from 'react'
 import './Main.css'
 import logo from './../../public/logo.webp'
 import { Link } from 'wasp/client/router'
-import { logout, useAuth } from 'wasp/client/auth'
-import { Outlet, useLocation } from 'react-router-dom'
+import { useAuth } from 'wasp/client/auth'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 export const Main: FC = () => {
-  const { data: user, isLoading } = useAuth()
+  const { data: user } = useAuth()
   const location = useLocation()
-  const currentPath = location.pathname
+  const navigate = useNavigate()
 
-  const isChatPage = currentPath === '/chat'
+  const isChatPage = location.pathname === '/chat'
+
+  const handleProfileClick = async () => {
+    navigate('/profile')
+  }
 
   return (
-    // Changed from 'min-h-screen' to 'h-screen' 
-    <div className='h-screen flex flex-col'>
-      <nav className='bg-gray-800 p-4'>
-        <div className='container mx-auto flex items-center'>
-          {/* Logo on the far left */}
-          <img
-            src={logo}
-            alt='Wasp Logo'
-            className='w-8 h-8 mr-2'
-          />
-
-          {/* Title text directly to the right of the logo */}
-          <Link
-            to='/'
-            className='text-yellow-300 hover:text-gray-300 transition-colors mr-auto'
-          >
-            Slack Clone v5
+    <div className='h-screen flex'>
+      {/* Vertical Menu Bar */}
+      <nav className='bg-violet-800 w-16 flex flex-col items-center justify-between py-4'>
+        {/* Top Section: Clickable Logo */}
+        <div className='flex flex-col items-center'>
+          <Link to='/'>
+            <img
+              src={logo}
+              alt='Wasp Logo'
+              className='w-8 h-8 mb-4'
+            />
           </Link>
-
-          {/* Hide "Chat" nav button if we are on the /chat page */}
           {!isChatPage && (
             <Link
               to='/chat'
-              className='text-yellow-300 hover:text-gray-300 transition-colors mr-4'
+              className='text-white hover:text-gray-300 transition-colors'
             >
               Chat
             </Link>
           )}
-
-          {/* Login / Logout */}
-          {user ? (
-            <button
-              onClick={() => logout()}
-              className='text-white hover:text-gray-300 transition-colors'
-            >
-              Logout, {user.email}
-            </button>
-          ) : (
-            <Link to='/login' className='text-white hover:text-gray-300 transition-colors'>
-              Login
-            </Link>
-          )}
         </div>
+
+        {/* Bottom Section: Profile Icon -> Navigate to /profile */}
+        {user && (
+          <button
+            onClick={handleProfileClick}
+            className='text-white hover:text-gray-300 transition-colors'
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              fill='none'
+              viewBox='0 0 24 24'
+              strokeWidth={1.5}
+              stroke='currentColor'
+              className='w-6 h-6'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                d='M15.75 9A3.75 3.75 0 1112 5.25 3.75 3.75 0 0115.75 9zm0 0v3.75m-7.5-3.75v3.75m1.5 2.25a6 6 0 1112 0 6 6 0 01-12 0z'
+              />
+            </svg>
+          </button>
+        )}
       </nav>
 
-      {/* Make the main area take up remaining vertical space and prevent overflow */}
-      <main className='flex-1 flex overflow-hidden'>
+      {/* Main Content Area */}
+      <div className='flex-1 flex overflow-hidden'>
         <Outlet />
-      </main>
+      </div>
     </div>
   )
 }

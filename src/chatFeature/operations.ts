@@ -7,6 +7,8 @@ import type {
   DeleteChannel
 } from 'wasp/server/operations'
 import { HttpError } from 'wasp/server'
+import type { UpdateDisplayName } from 'wasp/server/operations'
+
 
 type ChatMessageWithUser = ChatMessage & { user: User }
 
@@ -150,3 +152,22 @@ export const deleteChannel: DeleteChannel<DeleteChannelInput, Channel> = async (
     where: { id: channelId }
   })
 }
+
+type UpdateDisplayNameInput = {
+    displayName: string
+  }
+  
+  export const updateDisplayName: UpdateDisplayName<UpdateDisplayNameInput, User> = async (
+    { displayName },
+    context
+  ) => {
+    if (!context.user) {
+      throw new HttpError(401, 'User not found')
+    }
+  
+    return context.entities.User.update({
+      where: { id: context.user.id },
+      data: { displayName }
+    })
+  }
+  

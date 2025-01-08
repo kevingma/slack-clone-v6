@@ -11,13 +11,9 @@ import { useAuth } from 'wasp/client/auth'
 export const ChatPage: FC = () => {
   const { data: user } = useAuth()
 
-  // Provide a default value of empty array for channels
   const { data: channels = [], refetch: refetchChannels } = useQuery(getChannels)
-
-  // Track selectedChannelId in state
   const [selectedChannelId, setSelectedChannelId] = useState<number | undefined>(undefined)
 
-  // Query for chat messages in the selected channel (or default #general)
   const {
     data: messages,
     isFetching,
@@ -25,12 +21,9 @@ export const ChatPage: FC = () => {
   } = useQuery(getChatMessages, { channelId: selectedChannelId })
 
   const [content, setContent] = useState('')
-
-  // State for creating a channel
   const [showNewChannelForm, setShowNewChannelForm] = useState(false)
   const [newChannelName, setNewChannelName] = useState('')
 
-  // Poll for new messages every 2 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       refetchMessages()
@@ -43,7 +36,7 @@ export const ChatPage: FC = () => {
     try {
       await createChatMessage({ content, channelId: selectedChannelId })
       setContent('')
-      refetchMessages() // Immediately refetch so user sees their message
+      refetchMessages()
     } catch (err: any) {
       window.alert('Error sending message: ' + err.message)
     }
@@ -66,7 +59,6 @@ export const ChatPage: FC = () => {
   }
 
   return (
-    // Use 'w-full h-full overflow-hidden' so it stretches fully
     <div className='w-full h-full overflow-hidden flex'>
       {/* Sidebar */}
       <div className='w-64 bg-gray-200 flex flex-col p-4 h-full'>
@@ -126,7 +118,9 @@ export const ChatPage: FC = () => {
           {messages?.map(msg => (
             <div key={msg.id} className='mb-4'>
               <div className='text-sm text-gray-700 font-semibold mb-1'>
-                {msg.user?.username ?? msg.user?.email ?? 'Unknown User'}
+                {(msg.user as any)?.displayName ??
+                  msg.user?.email ??
+                  'Unknown User'}
               </div>
               <div className='bg-white p-2 border border-gray-200'>
                 {msg.content}

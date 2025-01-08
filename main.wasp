@@ -9,7 +9,9 @@ app SlackCloneV5 {
   auth: {
     userEntity: User,
     methods: {
-      usernameAndPassword: {},
+      usernameAndPassword: {
+        userSignupFields: import { localSignupFields } from "@src/auth/localSignupFields.ts"
+      },
       google: {
         configFn: import { googleConfig } from "@src/auth/google.ts",
         userSignupFields: import { googleSignupFields } from "@src/auth/google.ts"
@@ -22,7 +24,6 @@ app SlackCloneV5 {
     onAuthFailedRedirectTo: "/login"
   },
 }
-
 // Landing page
 route LandingPageRoute { path: "/", to: LandingPage }
 page LandingPage {
@@ -50,7 +51,6 @@ page ChatPage {
   component: import { ChatPage } from "@src/chatFeature/ChatPage.tsx"
 }
 
-// Include both ChatMessage and User so we can reference them in the operations
 query getChatMessages {
   fn: import { getChatMessages } from "@src/chatFeature/operations.ts",
   entities: [ChatMessage, Channel, User]
@@ -66,16 +66,26 @@ query getChannels {
   entities: [Channel]
 }
 
-// Add `User` here so we can safely reference context.user in createChannel
 action createChannel {
   fn: import { createChannel } from "@src/chatFeature/operations.ts",
   entities: [Channel, User]
 }
 
-// Deleting a channel also deletes its ChatMessages, 
-// and we also need `User` to check if the request is coming from an authenticated user.
 action deleteChannel {
   fn: import { deleteChannel } from "@src/chatFeature/operations.ts",
   entities: [Channel, ChatMessage, User]
+}
+//#endregion
+
+//#region User Feature
+route ProfileRoute { path: "/profile", to: ProfilePage }
+page ProfilePage {
+  authRequired: true,
+  component: import { ProfilePage } from "@src/userFeature/ProfilePage.tsx"
+}
+
+action updateDisplayName {
+  fn: import { updateDisplayName } from "@src/userFeature/operations.ts",
+  entities: [User]
 }
 //#endregion
