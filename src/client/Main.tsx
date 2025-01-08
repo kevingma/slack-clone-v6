@@ -1,4 +1,5 @@
 import type { FC } from 'react'
+import { useEffect } from 'react'
 import './Main.css'
 import logo from './../../public/logo.webp'
 import { Link } from 'wasp/client/router'
@@ -9,6 +10,16 @@ export const Main: FC = () => {
   const { data: user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (
+      user &&
+      (!(user as any).username || !(user as any).displayName) &&
+      location.pathname !== '/onboarding'
+    ) {
+      navigate('/onboarding')
+    }
+  }, [user, location.pathname, navigate])
 
   const handleProfileClick = async () => {
     navigate('/profile')

@@ -103,3 +103,14 @@ action createWorkspace {
   entities: [Workspace, WorkspaceUser, User]
 }
 //#endregion
+
+route OnboardingRoute { path: "/onboarding", to: OnboardingPage }
+page OnboardingPage {
+  authRequired: true,
+  component: import { OnboardingPage } from "@src/auth/OnboardingPage.tsx"
+}
+
+action completeOnboarding {
+  fn: import { completeOnboarding } from "@src/auth/operations.ts",
+  entities: [User]
+}

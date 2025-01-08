@@ -10,10 +10,9 @@ generator client {
 model User {
   id           Int           @id @default(autoincrement())
   email        String        @unique
-  username     String?
-  displayName  String?
+  username     String        @unique
+  displayName  String
   chatMessages ChatMessage[]
-  // New relation to WorkspaceUser
   workspaces   WorkspaceUser[]
 }
 
