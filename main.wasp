@@ -24,6 +24,7 @@ app SlackCloneV5 {
     onAuthFailedRedirectTo: "/login"
   },
 }
+
 // Landing page
 route LandingPageRoute { path: "/", to: LandingPage }
 page LandingPage {
@@ -53,27 +54,28 @@ page ChatPage {
 
 query getChatMessages {
   fn: import { getChatMessages } from "@src/chatFeature/operations.ts",
-  entities: [ChatMessage, Channel, User]
+  entities: [ChatMessage, Channel, User, Workspace]
 }
 
 action createChatMessage {
   fn: import { createChatMessage } from "@src/chatFeature/operations.ts",
-  entities: [ChatMessage, Channel, User]
+  entities: [ChatMessage, Channel, User, Workspace]
 }
 
 query getChannels {
   fn: import { getChannels } from "@src/chatFeature/operations.ts",
-  entities: [Channel]
+  entities: [Channel, Workspace]
 }
 
+// Added WorkspaceUser here for createChannel + deleteChannel
 action createChannel {
   fn: import { createChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, User]
+  entities: [Channel, User, Workspace, WorkspaceUser]
 }
 
 action deleteChannel {
   fn: import { deleteChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, ChatMessage, User]
+  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser]
 }
 //#endregion
 
@@ -87,5 +89,17 @@ page ProfilePage {
 action updateDisplayName {
   fn: import { updateDisplayName } from "@src/userFeature/operations.ts",
   entities: [User]
+}
+//#endregion
+
+//#region Workspace Feature
+query getWorkspaces {
+  fn: import { getWorkspaces } from "@src/workspaceFeature/operations.ts",
+  entities: [Workspace, WorkspaceUser, User]
+}
+
+action createWorkspace {
+  fn: import { createWorkspace } from "@src/workspaceFeature/operations.ts",
+  entities: [Workspace, WorkspaceUser, User]
 }
 //#endregion

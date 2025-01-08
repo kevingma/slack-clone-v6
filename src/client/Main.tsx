@@ -10,8 +10,6 @@ export const Main: FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const isChatPage = location.pathname === '/chat'
-
   const handleProfileClick = async () => {
     navigate('/profile')
   }
@@ -29,14 +27,49 @@ export const Main: FC = () => {
               className='w-8 h-8 mb-4'
             />
           </Link>
-          {!isChatPage && (
-            <Link
-              to='/chat'
-              className='text-white hover:text-gray-300 transition-colors'
+          {/* New Chat button */}
+          <Link
+            to='/chat'
+            className='text-white hover:text-gray-300 transition-colors flex flex-col items-center mb-4'
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              fill='none'
+              viewBox='0 0 24 24'
+              strokeWidth={1.5}
+              stroke='currentColor'
+              className='w-6 h-6'
             >
-              Chat
-            </Link>
-          )}
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                d='M2.25 15a2.25 2.25 0 0 0 2.25 2.25h3.75l3.75 3.75V17.25h4.5A2.25 2.25 0 0 0 18.75 15V6.75A2.25 2.25 0 0 0 16.5 4.5h-12A2.25 2.25 0 0 0 2.25 6.75v8.25z'
+              />
+            </svg>
+            Chat
+          </Link>
+          {/* New DMs button */}
+          <button
+            type='button'
+            className='text-white hover:text-gray-300 transition-colors flex flex-col items-center'
+            onClick={() => {}}
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              fill='none'
+              viewBox='0 0 24 24'
+              strokeWidth={1.5}
+              stroke='currentColor'
+              className='w-6 h-6'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                d='M21.75 7.5l-9 4.5-9-4.5m18 9-9 4.5-9-4.5'
+              />
+            </svg>
+            DMs
+          </button>
         </div>
 
         {/* Bottom Section: Profile Icon -> Navigate to /profile */}

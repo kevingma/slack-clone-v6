@@ -7,16 +7,31 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Step 1: Temporarily allow ChatMessage.channelId to be optional
-//   so we can migrate existing data into a channel without error.
-//   We'll revert it back to required in a follow-up migration.
-
 model User {
   id           Int           @id @default(autoincrement())
   email        String        @unique
   username     String?
   displayName  String?
   chatMessages ChatMessage[]
+  // New relation to WorkspaceUser
+  workspaces   WorkspaceUser[]
+}
+
+model Workspace {
+  id         Int              @id @default(autoincrement())
+  name       String
+  createdAt  DateTime         @default(now())
+  channels   Channel[]
+  users      WorkspaceUser[]
+}
+
+model WorkspaceUser {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  workspaceId Int
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  role        String?
 }
 
 model Channel {
@@ -24,6 +39,10 @@ model Channel {
   name         String
   createdAt    DateTime      @default(now())
   chatMessages ChatMessage[]
+  // Reference the Workspace
+  // Make this optional for now so the migration won't fail on existing rows
+  workspaceId  Int?
+  workspace    Workspace?     @relation(fields: [workspaceId], references: [id])
 }
 
 model ChatMessage {
@@ -33,7 +52,6 @@ model ChatMessage {
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
 
-  // Temporarily optional:
   channelId Int?
   channel   Channel? @relation(fields: [channelId], references: [id])
 }
