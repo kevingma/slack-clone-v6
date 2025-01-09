@@ -8,12 +8,14 @@ generator client {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  username     String        @unique
+  id           Int                   @id @default(autoincrement())
+  email        String                @unique
+  username     String                @unique
   displayName  String
   chatMessages ChatMessage[]
   workspaces   WorkspaceUser[]
+  // Add this to fix missing opposite relation for ChannelParticipant.user
+  channelParticipants ChannelParticipant[]
 }
 
 model Workspace {
@@ -40,9 +42,13 @@ model Channel {
   chatMessages ChatMessage[]
   workspaceId  Int?
   workspace    Workspace?           @relation(fields: [workspaceId], references: [id])
-  // New fields below:
   isDm         Boolean              @default(false)
   participants ChannelParticipant[]
+
+  // New fields for thread support:
+  isThread        Boolean      @default(false)
+  parentMessageId Int?
+  parentMessage   ChatMessage? @relation("ThreadParentMessage", fields: [parentMessageId], references: [id])
 }
 
 model ChannelParticipant {
@@ -61,4 +67,8 @@ model ChatMessage {
   user      User     @relation(fields: [userId], references: [id])
   channelId Int?
   channel   Channel? @relation(fields: [channelId], references: [id])
+  
+  // Add this to fix missing opposite relation for Channel.parentMessage
+  childThreads Channel[] @relation("ThreadParentMessage")
 }
+

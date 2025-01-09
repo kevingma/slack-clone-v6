@@ -30,8 +30,8 @@ export const ChatPage: FC = () => {
   const [selectedChannelId, setSelectedChannelId] = useState<number | undefined>()
   const { data: messages, isFetching, refetch: refetchMessages } = useQuery(
     getChatMessages,
-    { channelId: selectedChannelId },
-    { enabled: !!selectedChannelId }
+    selectedChannelId !== undefined ? { channelId: selectedChannelId } : undefined,
+    { enabled: selectedChannelId !== undefined }
   )
 
   const [content, setContent] = useState('')

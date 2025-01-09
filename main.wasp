@@ -54,30 +54,38 @@ page ChatPage {
 
 query getChatMessages {
   fn: import { getChatMessages } from "@src/chatFeature/operations.ts",
-  entities: [ChatMessage, Channel, User, Workspace]
+  entities: [ChatMessage, Channel, User, Workspace, WorkspaceUser]   // ADDED WorkspaceUser
 }
 
 action createChatMessage {
   fn: import { createChatMessage } from "@src/chatFeature/operations.ts",
-  entities: [ChatMessage, Channel, User, Workspace]
+  entities: [ChatMessage, Channel, User, Workspace, WorkspaceUser]   // ADDED WorkspaceUser
 }
 
 query getChannels {
   fn: import { getChannels } from "@src/chatFeature/operations.ts",
-  entities: [Channel, Workspace]
+  entities: [Channel, Workspace, User, WorkspaceUser, ChatMessage]   // ADDED User, WorkspaceUser, ChatMessage
 }
 
-// Added WorkspaceUser here for createChannel + deleteChannel
 action createChannel {
   fn: import { createChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, User, Workspace, WorkspaceUser]
+  entities: [Channel, User, Workspace, WorkspaceUser, ChatMessage]   // ADDED ChatMessage
 }
 
 action deleteChannel {
   fn: import { deleteChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser]
+  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser]    // (already includes all)
 }
-//#endregion
+
+action createThreadChannel {
+  fn: import { createThreadChannel } from "@src/chatFeature/operations.ts",
+  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser]    // (already includes all)
+}
+
+query getThreadChannel {
+  fn: import { getThreadChannel } from "@src/chatFeature/operations.ts",
+  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser]    // ADDED WorkspaceUser
+}
 
 //#region User Feature
 route ProfileRoute { path: "/profile", to: ProfilePage }
@@ -88,19 +96,19 @@ page ProfilePage {
 
 action updateDisplayName {
   fn: import { updateDisplayName } from "@src/userFeature/operations.ts",
-  entities: [User]
+  entities: [User, Workspace, WorkspaceUser, Channel, ChatMessage]    // EXPANDED to match context
 }
 //#endregion
 
 //#region Workspace Feature
 query getWorkspaces {
   fn: import { getWorkspaces } from "@src/workspaceFeature/operations.ts",
-  entities: [Workspace, WorkspaceUser, User]
+  entities: [Workspace, WorkspaceUser, User, Channel, ChatMessage]    // EXPANDED to match context
 }
 
 action createWorkspace {
   fn: import { createWorkspace } from "@src/workspaceFeature/operations.ts",
-  entities: [Workspace, WorkspaceUser, User]
+  entities: [Workspace, WorkspaceUser, User, Channel, ChatMessage]    // EXPANDED to match context
 }
 //#endregion
 

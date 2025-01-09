@@ -1,161 +1,229 @@
-import type { ChatMessage, User, Channel, Workspace } from 'wasp/entities'
-import type {
-  GetChatMessages,
-  CreateChatMessage,
-  GetChannels,
-  CreateChannel,
-  DeleteChannel
-} from 'wasp/server/operations'
 import { HttpError } from 'wasp/server'
+import type { User, ChatMessage, Channel, WorkspaceUser, Workspace } from 'wasp/entities'
 
-type GetChatMessagesArgs = {
-  channelId?: number
-  // no workspaceId needed here unless we want to ensure the message is in the workspace
+// Define our own context type, since wasp/server doesn't export QueryArgs or ActionArgs
+type WaspContext = {
+  user?: User
+  entities: {
+    User: any
+    Workspace: any
+    WorkspaceUser: any
+    Channel: any
+    ChatMessage: any
+  }
 }
 
-// Return all messages in a specific channel, newest last
-export const getChatMessages: GetChatMessages<GetChatMessagesArgs, (ChatMessage & { user: User })[]> = async (
-  { channelId },
-  context
-) => {
+/**
+ * getChatMessages
+ */
+export async function getChatMessages(
+    { channelId }: { channelId: number },
+    context: WaspContext
+  ): Promise<(ChatMessage & { user: User })[]> {
+    if (!context.user) {
+      throw new HttpError(401, 'User not found')
+    }
+  
+    if (!channelId) {
+      throw new HttpError(400, 'No channelId provided')
+    }
+  
+    return context.entities.ChatMessage.findMany({
+      where: { channelId },
+      include: { user: true },
+      orderBy: { id: 'asc' },
+    })
+  }
+
+/**
+ * createChatMessage
+ */
+export async function createChatMessage(
+  { content, channelId }: { content: string; channelId: number },
+  context: WaspContext
+): Promise<ChatMessage> {
   if (!context.user) {
     throw new HttpError(401, 'User not found')
   }
 
-  // same logic as before
-  if (!channelId) {
-    // find or create #general in a default workspace, for example
-    // or throw an error if channelId is required
-    throw new HttpError(400, 'channelId is required')
+  if (!content.trim() || !channelId) {
+    throw new HttpError(400, 'Missing content or channelId')
   }
 
-  const channel = await context.entities.Channel.findUnique({ where: { id: channelId } })
-  if (!channel) {
-    throw new HttpError(404, 'Channel not found')
-  }
-
-  return context.entities.ChatMessage.findMany({
-    where: { channelId },
-    include: { user: true },
-    orderBy: { id: 'asc' }
-  })
-}
-
-// Create a new message in a specific channel
-type CreateChatMessageInput = {
-  content: string
-  channelId: number
-}
-export const createChatMessage: CreateChatMessage<CreateChatMessageInput, ChatMessage> = async (
-  { content, channelId },
-  context
-) => {
-  if (!context.user) {
-    throw new HttpError(401, 'User not found')
-  }
-
-  const channel = await context.entities.Channel.findUnique({ where: { id: channelId } })
-  if (!channel) {
-    throw new HttpError(404, 'Channel not found')
-  }
-
+  // Optional membership checks could go here if needed
   return context.entities.ChatMessage.create({
     data: {
       content,
       userId: context.user.id,
-      channelId
-    }
+      channelId,
+    },
   })
 }
 
-// =============== Channel operations ===============
-type GetChannelsArgs = {
-  workspaceId: number
-}
-
-// Get all channels for a given workspace
-export const getChannels: GetChannels<GetChannelsArgs, Channel[]> = async ({ workspaceId }, context) => {
+/**
+ * getChannels
+ */
+export async function getChannels(
+  { workspaceId }: { workspaceId: number },
+  context: WaspContext
+): Promise<Channel[]> {
   if (!context.user) {
     throw new HttpError(401, 'User not found')
   }
 
-  return context.entities.Channel.findMany({
-    where: { workspaceId },
-    orderBy: { name: 'asc' }
-  })
-}
-
-// Create a new channel in a specific workspace
-type CreateChannelInput = {
-  name: string
-  workspaceId: number
-}
-export const createChannel: CreateChannel<CreateChannelInput, Channel> = async ({ name, workspaceId }, context) => {
-  if (!context.user) {
-    throw new HttpError(401, 'User not found')
+  if (!workspaceId) {
+    throw new HttpError(400, 'No workspaceId provided')
   }
 
-  const channelName = name.startsWith('#') ? name : `#${name}`
-
-  // check if user is in that workspace
+  // Check membership in the target workspace
   const membership = await context.entities.WorkspaceUser.findFirst({
-    where: {
-      userId: context.user.id,
-      workspaceId
-    }
+    where: { userId: context.user.id, workspaceId },
   })
   if (!membership) {
-    throw new HttpError(403, 'You are not a member of this workspace.')
+    throw new HttpError(403, 'Not a member of this workspace.')
   }
 
-  const existingChannel = await context.entities.Channel.findFirst({
-    where: {
-      name: channelName,
-      workspaceId
-    }
+  // Return channels
+  return context.entities.Channel.findMany({
+    where: { workspaceId, isThread: false },
+    orderBy: { id: 'asc' },
   })
-  if (existingChannel) {
-    throw new HttpError(400, 'Channel already exists in this workspace')
+}
+
+/**
+ * createChannel
+ */
+export async function createChannel(
+  { name, workspaceId }: { name: string; workspaceId: number },
+  context: WaspContext
+): Promise<Channel> {
+  if (!context.user) {
+    throw new HttpError(401, 'User not found')
+  }
+
+  // Check membership
+  const membership = await context.entities.WorkspaceUser.findFirst({
+    where: { userId: context.user.id, workspaceId },
+  })
+  if (!membership) {
+    throw new HttpError(403, 'Not a member of this workspace.')
   }
 
   return context.entities.Channel.create({
     data: {
-      name: channelName,
-      workspaceId
-    }
+      name,
+      workspaceId,
+      isThread: false,
+    },
   })
 }
 
-// Delete a channel
-type DeleteChannelInput = {
-  channelId: number
-}
-export const deleteChannel: DeleteChannel<DeleteChannelInput, Channel> = async ({ channelId }, context) => {
+/**
+ * deleteChannel
+ */
+export async function deleteChannel(
+  { channelId }: { channelId: number },
+  context: WaspContext
+): Promise<Channel> {
   if (!context.user) {
     throw new HttpError(401, 'User not found')
   }
 
-  const channel = await context.entities.Channel.findUnique({ where: { id: channelId } })
+  // Check if channel exists
+  const channel = await context.entities.Channel.findUnique({
+    where: { id: channelId },
+  })
   if (!channel) {
-    throw new HttpError(404, 'Channel not found')
+    throw new HttpError(404, 'Channel not found.')
   }
 
-  if (channel.name === '#general') {
-    throw new HttpError(400, 'Cannot delete the #general channel.')
+  // You could add additional checks such as only owner can delete, etc.
+
+  // Delete messages tied to this channel
+  await context.entities.ChatMessage.deleteMany({
+    where: { channelId },
+  })
+
+  // Delete the channel
+  return context.entities.Channel.delete({
+    where: { id: channelId },
+  })
+}
+
+/**
+ * createThreadChannel
+ */
+export async function createThreadChannel(
+  { parentMessageId, workspaceId }: { parentMessageId: number; workspaceId: number },
+  context: WaspContext
+): Promise<Channel> {
+  if (!context.user) {
+    throw new HttpError(401, 'User not found')
   }
 
-  // check membership
+  // Check user membership in the target workspace
   const membership = await context.entities.WorkspaceUser.findFirst({
-    where: {
-      userId: context.user.id,
-      workspaceId: channel.workspaceId
-    }
+    where: { userId: context.user.id, workspaceId },
   })
   if (!membership) {
-    throw new HttpError(403, 'You are not a member of this workspace.')
+    throw new HttpError(403, 'Not a member of this workspace.')
   }
 
-  // Delete messages first or rely on cascade if set in DB
-  await context.entities.ChatMessage.deleteMany({ where: { channelId } })
-  return context.entities.Channel.delete({ where: { id: channelId } })
+  // Ensure parent message exists
+  const parentMessage = await context.entities.ChatMessage.findUnique({
+    where: { id: parentMessageId },
+  })
+  if (!parentMessage) {
+    throw new HttpError(404, 'Parent message not found.')
+  }
+
+  // Create the new thread channel
+  return context.entities.Channel.create({
+    data: {
+      name: `Thread on msg #${parentMessageId}`,
+      workspaceId,
+      isThread: true,
+      parentMessageId,
+    },
+  })
+}
+
+/**
+ * getThreadChannel
+ */
+export async function getThreadChannel(
+  { threadChannelId }: { threadChannelId: number },
+  context: WaspContext
+): Promise<(ChatMessage & { user: User })[]> {
+  if (!context.user) {
+    throw new HttpError(401, 'User not found')
+  }
+
+  // Make sure this channel is a valid thread
+  const threadChannel = await context.entities.Channel.findUnique({
+    where: { id: threadChannelId },
+  })
+  if (!threadChannel || !threadChannel.isThread) {
+    throw new HttpError(404, 'Thread channel not found or not a thread.')
+  }
+
+  // Check membership if this thread is linked to a workspace
+  if (threadChannel.workspaceId) {
+    const membership = await context.entities.WorkspaceUser.findFirst({
+      where: {
+        userId: context.user.id,
+        workspaceId: threadChannel.workspaceId,
+      },
+    })
+    if (!membership) {
+      throw new HttpError(403, 'You are not a member of this workspace.')
+    }
+  }
+
+  // Return the messages in this thread
+  return context.entities.ChatMessage.findMany({
+    where: { channelId: threadChannelId },
+    include: { user: true },
+    orderBy: { id: 'asc' },
+  })
 }
