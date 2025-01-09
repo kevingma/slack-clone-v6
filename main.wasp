@@ -54,37 +54,37 @@ page ChatPage {
 
 query getChatMessages {
   fn: import { getChatMessages } from "@src/chatFeature/operations.ts",
-  entities: [ChatMessage, Channel, User, Workspace, WorkspaceUser]   // ADDED WorkspaceUser
+  entities: [ChatMessage, Channel, User, Workspace, WorkspaceUser, Reaction]   // ADDED Reaction
 }
 
 action createChatMessage {
   fn: import { createChatMessage } from "@src/chatFeature/operations.ts",
-  entities: [ChatMessage, Channel, User, Workspace, WorkspaceUser]   // ADDED WorkspaceUser
+  entities: [ChatMessage, Channel, User, Workspace, WorkspaceUser, Reaction]   // ADDED Reaction
 }
 
 query getChannels {
   fn: import { getChannels } from "@src/chatFeature/operations.ts",
-  entities: [Channel, Workspace, User, WorkspaceUser, ChatMessage]   // ADDED User, WorkspaceUser, ChatMessage
+  entities: [Channel, Workspace, User, WorkspaceUser, ChatMessage, Reaction]   // ADDED Reaction
 }
 
 action createChannel {
   fn: import { createChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, User, Workspace, WorkspaceUser, ChatMessage]   // ADDED ChatMessage
+  entities: [Channel, User, Workspace, WorkspaceUser, ChatMessage, Reaction]   // ADDED Reaction
 }
 
 action deleteChannel {
   fn: import { deleteChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser]    // (already includes all)
+  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser, Reaction]   // ADDED Reaction
 }
 
 action createThreadChannel {
   fn: import { createThreadChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser]    // (already includes all)
+  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser, Reaction]   // ADDED Reaction
 }
 
 query getThreadChannel {
   fn: import { getThreadChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser]    // ADDED WorkspaceUser
+  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser, Reaction]   // ADDED Reaction
 }
 
 //#region User Feature
@@ -138,4 +138,14 @@ route DmPageRoute { path: "/dm", to: DmPage }
 page DmPage {
   authRequired: true,
   component: import { DmPage } from "@src/dmFeature/dmPage.tsx"
+}
+
+action addReaction {
+  fn: import { addReaction } from "@src/chatFeature/operations.ts",
+  entities: [Reaction, ChatMessage, User, Workspace, WorkspaceUser, Channel]
+}
+
+action removeReaction {
+  fn: import { removeReaction } from "@src/chatFeature/operations.ts",
+  entities: [Reaction, ChatMessage, User, Workspace, WorkspaceUser, Channel]
 }

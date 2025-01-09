@@ -1,7 +1,14 @@
 import { HttpError } from 'wasp/server'
-import type { User, ChatMessage, Channel, WorkspaceUser, Workspace } from 'wasp/entities'
+import type {
+  User,
+  ChatMessage,
+  Channel,
+  WorkspaceUser,
+  Workspace,
+  Reaction // <-- Added here
+} from 'wasp/entities'
 
-// Define our own context type, since wasp/server doesn't export QueryArgs or ActionArgs
+// Updated context type to include Reaction, ChatMessage, User
 type WaspContext = {
   user?: User
   entities: {
@@ -10,6 +17,7 @@ type WaspContext = {
     WorkspaceUser: any
     Channel: any
     ChatMessage: any
+    Reaction: any
   }
 }
 
@@ -227,3 +235,71 @@ export async function getThreadChannel(
     orderBy: { id: 'asc' },
   })
 }
+
+/**
+ * addReaction
+ */
+export async function addReaction(
+    { messageId, emoji }: { messageId: number; emoji: string },
+    context: WaspContext
+  ): Promise<Reaction> {
+    if (!context.user) {
+      throw new HttpError(401, 'User not found')
+    }
+    if (!emoji.trim() || !messageId) {
+      throw new HttpError(400, 'Missing emoji or messageId')
+    }
+  
+    const message = await context.entities.ChatMessage.findUnique({
+      where: { id: messageId },
+    })
+    if (!message) {
+      throw new HttpError(404, 'Message not found.')
+    }
+  
+    return context.entities.Reaction.upsert({
+      where: {
+        userId_messageId_emoji: {
+          userId: context.user.id,
+          messageId,
+          emoji,
+        },
+      },
+      create: {
+        emoji,
+        userId: context.user.id,
+        messageId,
+      },
+      update: {},
+    })
+  }
+  
+  /**
+   * removeReaction
+   */
+  export async function removeReaction(
+    { messageId, emoji }: { messageId: number; emoji: string },
+    context: WaspContext
+  ): Promise<Reaction> {
+    if (!context.user) {
+      throw new HttpError(401, 'User not found')
+    }
+    if (!emoji.trim() || !messageId) {
+      throw new HttpError(400, 'Missing emoji or messageId')
+    }
+  
+    const deletedReaction = await context.entities.Reaction.delete({
+      where: {
+        userId_messageId_emoji: {
+          userId: context.user.id,
+          messageId,
+          emoji,
+        },
+      },
+    })
+    if (!deletedReaction) {
+      throw new HttpError(404, 'Reaction not found.')
+    }
+  
+    return deletedReaction
+  }
