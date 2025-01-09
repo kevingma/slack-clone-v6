@@ -1,5 +1,5 @@
-import type { FC, ReactNode } from 'react';
-import { ContainerWithFlatShadow } from './containerWithFlatShadow';
+import type { FC, ReactNode } from 'react'
+import { ContainerWithFlatShadow } from './containerWithFlatShadow'
 
 export const TemplateHero: FC = () => {
   return (
@@ -9,5 +9,5 @@ export const TemplateHero: FC = () => {
         This is a Slack-like application built on Wasp, featuring a global chat with realtime updates.
       </p>
     </ContainerWithFlatShadow>
-  );
-};
+  )
+}
