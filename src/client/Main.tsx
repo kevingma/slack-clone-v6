@@ -59,11 +59,10 @@ export const Main: FC = () => {
             </svg>
             Chat
           </Link>
-          {/* New DMs button */}
-          <button
-            type='button'
+          {/* DMs */}
+          <Link
+            to='/dm'
             className='text-white hover:text-gray-300 transition-colors flex flex-col items-center'
-            onClick={() => {}}
           >
             <svg
               xmlns='http://www.w3.org/2000/svg'
@@ -80,7 +79,7 @@ export const Main: FC = () => {
               />
             </svg>
             DMs
-          </button>
+          </Link>
         </div>
 
         {/* Bottom Section: Profile Icon -> Navigate to /profile */}

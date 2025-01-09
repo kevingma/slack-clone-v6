@@ -114,3 +114,20 @@ action completeOnboarding {
   fn: import { completeOnboarding } from "@src/auth/operations.ts",
   entities: [User]
 }
+
+query getDmChannels {
+  fn: import { getDmChannels } from "@src/dmFeature/operations.ts",
+  entities: [Channel, ChannelParticipant, User]
+}
+
+action createDmChannel {
+  fn: import { createDmChannel } from "@src/dmFeature/operations.ts",
+  entities: [Channel, ChannelParticipant, User]
+}
+
+// New DM route
+route DmPageRoute { path: "/dm", to: DmPage }
+page DmPage {
+  authRequired: true,
+  component: import { DmPage } from "@src/dmFeature/dmPage.tsx"
+}
