@@ -18,4 +18,6 @@ export const googleSignupFields = defineUserSignupFields({
   },
   // Optionally, if you want to also set username from the Google profile:
   // username: (data) => data.profile?.name || ''
+  username: (data) => data.profile?.name || ('google_' + Date.now()),
+  displayName: (data) => data.profile?.name || ''
 })
