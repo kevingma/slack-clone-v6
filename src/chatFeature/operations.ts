@@ -165,9 +165,12 @@ export async function createChannel(
     throw new HttpError(403, 'Not a member of this workspace.')
   }
 
+  // Prepend '#' if it doesn't already start with it
+  const channelName = name.startsWith('#') ? name : `#${name}`
+
   return context.entities.Channel.create({
     data: {
-      name,
+      name: channelName,
       workspaceId,
       isThread: false,
     },
