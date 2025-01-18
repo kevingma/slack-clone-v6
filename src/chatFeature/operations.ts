@@ -1,4 +1,5 @@
 import { HttpError } from 'wasp/server'
+import { generateAIReply } from '../aiFeature/aiService'
 import type {
   User,
   ChatMessage,
@@ -58,15 +59,52 @@ export async function createChatMessage(
     throw new HttpError(400, 'Missing content or channelId')
   }
 
-  // Optional membership checks could go here if needed
-  return context.entities.ChatMessage.create({
+  // 1. Create the user's new chat message as usual.
+  const newMessage = await context.entities.ChatMessage.create({
     data: {
       content,
       userId: context.user.id,
       channelId,
     },
   })
+
+  // 2. Check if the content contains a mention of the form @<USER_DISPLAY_NAME>.
+  const mentionRegex = /@([\w\d]+)/g
+  const matches = content.matchAll(mentionRegex)
+
+  for (const match of matches) {
+    const displayName = match[1]
+    if (!displayName) continue
+
+    // 3. Find user by displayName (if that’s your logic for mentions).
+    const mentionedUser = await context.entities.User.findFirst({
+      where: { displayName },
+    })
+
+    // 4. If a user is found, generate an AI reply "on behalf of" the AI bot.
+    if (mentionedUser) {
+      // Import the AI function:
+      // import { generateAIReply } from '@src/aiFeature/aiService.ts'
+      // (Place the import at top-level; not shown here to keep the snippet focused.)
+
+      const aiResponse = await generateAIReply(displayName, content)
+
+      // 5. Create a new ChatMessage as the AI's response.
+      // You might designate a special "AI userId" or store it in your DB as well.
+      // For now, assume userId = 1 is the AI/bot user, or adapt as needed.
+      await context.entities.ChatMessage.create({
+        data: {
+          content: aiResponse,
+          userId: 1, // ID of your "bot" user, or any system user record you define
+          channelId,
+        },
+      })
+    }
+  }
+
+  return newMessage
 }
+
 
 /**
  * getChannels

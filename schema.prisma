@@ -16,6 +16,7 @@ model User {
   workspaces   WorkspaceUser[]
   // Add this to fix missing opposite relation for ChannelParticipant.user
   channelParticipants ChannelParticipant[]
+  persona String?
 }
 
 model Workspace {
