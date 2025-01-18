@@ -107,7 +107,8 @@ export const Main: FC = () => {
       </nav>
 
       {/* Main Content Area */}
-      <div className='flex-1 flex overflow-hidden'>
+      {/* Removed `overflow-hidden` here */}
+      <div className='flex-1 flex'>
         <Outlet />
       </div>
     </div>

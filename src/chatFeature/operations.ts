@@ -1,15 +1,14 @@
 import { HttpError } from 'wasp/server'
-import { generateAIReply } from '../aiFeature/aiService'
+import { generateAIReply, generateUserPersona } from '../aiFeature/aiService'
 import type {
   User,
   ChatMessage,
   Channel,
   WorkspaceUser,
   Workspace,
-  Reaction // <-- Added here
+  Reaction
 } from 'wasp/entities'
 
-// Updated context type to include Reaction, ChatMessage, User
 type WaspContext = {
   user?: User
   entities: {
@@ -69,52 +68,83 @@ export async function createChatMessage(
     throw new HttpError(400, 'Missing content or channelId')
   }
 
-  // 1. Create the user's new chat message as usual.
+  // 1. Create the user's new chat message.
   const newMessage = await context.entities.ChatMessage.create({
     data: {
       content,
       userId: context.user.id,
-      channelId,
-    },
+      channelId
+    }
   })
 
-  // 2. Check if the content contains a mention of the form @<USER_DISPLAY_NAME>.
+  // 2. Look for "@<DISPLAY_NAME>" mentions in the content.
   const mentionRegex = /@([\w\d]+)/g
   const matches = content.matchAll(mentionRegex)
 
-  for (const match of matches) {
-    const displayName = match[1]
-    if (!displayName) continue
+  // 3. Build a single string containing the entire chat history (for the channel).
+  const chatMessages = await context.entities.ChatMessage.findMany({
+    where: { channelId },
+    include: { user: true },
+    orderBy: { id: 'asc' }
+  })
+  const entireChatHistory = chatMessages
+    .map((m: ChatMessage & { user: User }) => {
+      const name = m.user.displayName || m.user.username || m.user.email
+      return `${name}: ${m.content}`
+    })
+    .join('\n')
 
-    // 3. Find user by displayName (if that’s your logic for mentions).
-    const mentionedUser = await context.entities.User.findFirst({
-      where: { displayName },
+  // 4. For each mention, generate an AI reply as that user if they have (or can create) a persona.
+  for (const match of matches) {
+    const mentionedDisplayName = match[1]
+    if (!mentionedDisplayName) continue
+
+    // Find the mentioned user by displayName.
+    let mentionedUser = await context.entities.User.findFirst({
+      where: { displayName: mentionedDisplayName }
     })
 
-    // 4. If a user is found, generate an AI reply "on behalf of" the AI bot.
     if (mentionedUser) {
-      // Import the AI function:
-      // import { generateAIReply } from '@src/aiFeature/aiService.ts'
-      // (Place the import at top-level; not shown here to keep the snippet focused.)
+      // If persona is missing, generate it from the user’s entire chat history.
+      if (!mentionedUser.persona) {
+        // Gather all messages from this user across all channels (or you can limit to certain scope).
+        const userMessages = await context.entities.ChatMessage.findMany({
+          where: { userId: mentionedUser.id },
+          orderBy: { id: 'asc' }
+        })
+        const userHistory = userMessages.map((msg: ChatMessage) => msg.content).join('\n')
 
-      const aiResponse = await generateAIReply(displayName, content)
+        // Generate persona and store it.
+        const generatedPersona = await generateUserPersona(userHistory)
+        mentionedUser = await context.entities.User.update({
+          where: { id: mentionedUser.id },
+          data: { persona: generatedPersona }
+        })
+      }
 
-      // 5. Create a new ChatMessage as the AI's response.
-      // You might designate a special "AI userId" or store it in your DB as well.
-      // For now, assume userId = 1 is the AI/bot user, or adapt as needed.
-      await context.entities.ChatMessage.create({
-        data: {
-          content: aiResponse,
-          userId: 1, // ID of your "bot" user, or any system user record you define
-          channelId,
-        },
-      })
+      // Only generate an AI reply if the user now has a persona.
+      if (mentionedUser.persona) {
+        const aiResponse = await generateAIReply(
+          mentionedUser.persona,
+          entireChatHistory,   // 2nd argument (chat history in the channel)
+          mentionedDisplayName,
+          content
+        )
+
+        // Create the AI's response message (bot userId=1).
+        await context.entities.ChatMessage.create({
+          data: {
+            content: aiResponse,
+            userId: 1, // system/bot user
+            channelId
+          }
+        })
+      }
     }
   }
 
   return newMessage
 }
-
 
 /**
  * getChannels

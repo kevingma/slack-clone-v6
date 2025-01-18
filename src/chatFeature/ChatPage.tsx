@@ -30,7 +30,6 @@ export const ChatPage: FC = () => {
     { enabled: !!selectedWorkspaceId }
   )
 
-  // Note the extra type for the input args: { channelId: number }
   const { data: messages = [], refetch: refetchMessages } = useQuery(
     getChatMessages,
     selectedChannelId !== undefined ? { channelId: selectedChannelId } : undefined,
@@ -104,10 +103,9 @@ export const ChatPage: FC = () => {
   }
 
   return (
-    <div className='w-full h-full overflow-hidden flex'>
+    <div className='w-full h-full flex'>
       {/* Left sidebar */}
       <div className='w-64 bg-gray-200 flex flex-col p-4 h-full'>
-        {/* Workspaces */}
         <div className='mb-4 flex items-center justify-between'>
           <h3 className='text-xl font-bold'>Workspaces</h3>
           <button
@@ -152,8 +150,6 @@ export const ChatPage: FC = () => {
             ))}
           </select>
         </div>
-
-        {/* Channels */}
         <div className='flex items-center justify-between mb-4'>
           <h3 className='text-xl font-bold'>Channels</h3>
           <button
@@ -197,7 +193,7 @@ export const ChatPage: FC = () => {
       </div>
 
       {/* Main chat area */}
-      <div className='flex-1 flex flex-col border-l border-gray-300 h-full overflow-hidden'>
+      <div className='flex-1 flex flex-col border-l border-gray-300 h-full'>
         <div className='p-4 border-b border-gray-300'>
           <h2 className='text-2xl font-bold'>
             {selectedChannelId
@@ -206,67 +202,74 @@ export const ChatPage: FC = () => {
           </h2>
         </div>
 
-        <div className='flex-1 overflow-y-auto bg-gray-50 p-4'>
-          {Array.isArray(messages) && (messages as ChatMessageWithReactions[]).map((msg: ChatMessageWithReactions) => (
-            <div key={msg.id} className='mb-4'>
-              <div className='flex items-start'>
-                <div className='relative group mr-3'>
-                  <img
-                    src='https://placehold.co/32x32'
-                    alt='User Avatar'
-                    className='w-8 h-8 rounded-full'
-                  />
+        {/* Scrollable message list */}
+        <div className='flex-1 overflow-y-auto bg-gray-50 p-4 min-h-0'>
+          {Array.isArray(messages) &&
+            (messages as ChatMessageWithReactions[]).map((msg: ChatMessageWithReactions) => (
+              <div key={msg.id} className='mb-4'>
+                <div className='flex items-start'>
+                  <div className='relative group mr-3'>
+                    <img
+                      src='https://placehold.co/32x32'
+                      alt='User Avatar'
+                      className='w-8 h-8 rounded-full'
+                    />
+                  </div>
+                  <div>
+                    <div className='text-sm text-gray-700 font-semibold'>
+                      {msg.user.displayName || msg.user.username || msg.user.email}
+                    </div>
+                    <div className='bg-white p-2 border border-gray-200'>
+                      {msg.content}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className='text-sm text-gray-700 font-semibold'>
-                    {msg.user.displayName || msg.user.username || msg.user.email}
+                {msg.reactions.length > 0 && (
+                  <div className='ml-11 mt-1 flex gap-2 flex-wrap'>
+                    {msg.reactions.map((reaction: Reaction & { user: User }) => (
+                      <button
+                        key={reaction.id}
+                        className='bg-gray-200 px-1 rounded text-sm flex items-center gap-1'
+                        onClick={() => handleRemoveReaction(msg.id, reaction.emoji)}
+                        title='Click to remove your reaction'
+                      >
+                        <span>{reaction.emoji}</span>
+                        {reaction.userId === user?.id && <span>(You)</span>}
+                      </button>
+                    ))}
                   </div>
-                  <div className='bg-white p-2 border border-gray-200'>
-                    {msg.content}
-                  </div>
+                )}
+                <div className='ml-11 mt-1'>
+                  <button
+                    className='text-xs text-blue-600 underline'
+                    onClick={() => handleAddReaction(msg.id, '👍')}
+                  >
+                    +1
+                  </button>
+                  <button
+                    className='text-xs text-blue-600 underline ml-2'
+                    onClick={() => handleAddReaction(msg.id, '❤️')}
+                  >
+                    ❤️
+                  </button>
                 </div>
               </div>
-
-              {msg.reactions.length > 0 && (
-                <div className='ml-11 mt-1 flex gap-2 flex-wrap'>
-                  {msg.reactions.map((reaction: Reaction & { user: User }) => (
-                    <button
-                      key={reaction.id}
-                      className='bg-gray-200 px-1 rounded text-sm flex items-center gap-1'
-                      onClick={() => handleRemoveReaction(msg.id, reaction.emoji)}
-                      title='Click to remove your reaction'
-                    >
-                      <span>{reaction.emoji}</span>
-                      {reaction.userId === user?.id && <span>(You)</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className='ml-11 mt-1'>
-                <button
-                  className='text-xs text-blue-600 underline'
-                  onClick={() => handleAddReaction(msg.id, '👍')}
-                >
-                  +1
-                </button>
-                <button
-                  className='text-xs text-blue-600 underline ml-2'
-                  onClick={() => handleAddReaction(msg.id, '❤️')}
-                >
-                  ❤️
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
 
+        {/* Input box pinned at bottom */}
         <div className='p-4 border-t border-gray-300 flex gap-2'>
           <input
             className='border p-2 flex-1'
             placeholder='Write a message...'
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleSendMessage()
+              }
+            }}
             disabled={!selectedChannelId}
           />
           <button
