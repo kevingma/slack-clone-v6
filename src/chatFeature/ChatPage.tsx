@@ -5,38 +5,43 @@ import {
   getChannels,
   createChannel,
   getWorkspaces,
-  createWorkspace
+  createWorkspace,
+  getChatMessages,
+  createChatMessage,
+  addReaction,
+  removeReaction
 } from 'wasp/client/operations'
-import { getChatMessages, createChatMessage } from 'wasp/client/operations'
-import type { Workspace } from 'wasp/entities'
+import type { Workspace, User, Reaction, ChatMessage } from 'wasp/entities'
+
+type ChatMessageWithReactions = ChatMessage & {
+  user: User
+  reactions: (Reaction & { user: User })[]
+}
 
 export const ChatPage: FC = () => {
   const { data: user } = useAuth()
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<number | null>(null)
-  const [showNewWorkspaceForm, setShowNewWorkspaceForm] = useState(false)
-  const [newWorkspaceName, setNewWorkspaceName] = useState('')
+  const [selectedChannelId, setSelectedChannelId] = useState<number | undefined>()
 
-  const {
-    data: workspaces = [],
-    refetch: refetchWorkspaces
-  } = useQuery(getWorkspaces) as { data: Workspace[], refetch: () => void }
-
+  const { data: workspaces = [], refetch: refetchWorkspaces } = useQuery(getWorkspaces)
   const { data: channels = [], refetch: refetchChannels } = useQuery(
     getChannels,
     { workspaceId: selectedWorkspaceId ?? 0 },
     { enabled: !!selectedWorkspaceId }
   )
 
-  const [selectedChannelId, setSelectedChannelId] = useState<number | undefined>()
-  const { data: messages, isFetching, refetch: refetchMessages } = useQuery(
+  // Note the extra type for the input args: { channelId: number }
+  const { data: messages = [], refetch: refetchMessages } = useQuery(
     getChatMessages,
     selectedChannelId !== undefined ? { channelId: selectedChannelId } : undefined,
     { enabled: selectedChannelId !== undefined }
   )
 
   const [content, setContent] = useState('')
-  const [showNewChannelForm, setShowNewChannelForm] = useState(false)
   const [newChannelName, setNewChannelName] = useState('')
+  const [showNewChannelForm, setShowNewChannelForm] = useState(false)
+  const [newWorkspaceName, setNewWorkspaceName] = useState('')
+  const [showNewWorkspaceForm, setShowNewWorkspaceForm] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -53,6 +58,24 @@ export const ChatPage: FC = () => {
       refetchMessages()
     } catch (err: any) {
       window.alert('Error sending message: ' + err.message)
+    }
+  }
+
+  const handleAddReaction = async (messageId: number, emoji: string) => {
+    try {
+      await addReaction({ messageId, emoji })
+      refetchMessages()
+    } catch (err: any) {
+      window.alert('Error adding reaction: ' + err.message)
+    }
+  }
+
+  const handleRemoveReaction = async (messageId: number, emoji: string) => {
+    try {
+      await removeReaction({ messageId, emoji })
+      refetchMessages()
+    } catch (err: any) {
+      window.alert('Error removing reaction: ' + err.message)
     }
   }
 
@@ -82,11 +105,13 @@ export const ChatPage: FC = () => {
 
   return (
     <div className='w-full h-full overflow-hidden flex'>
+      {/* Left sidebar */}
       <div className='w-64 bg-gray-200 flex flex-col p-4 h-full'>
+        {/* Workspaces */}
         <div className='mb-4 flex items-center justify-between'>
           <h3 className='text-xl font-bold'>Workspaces</h3>
           <button
-            className='bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors'
+            className='bg-blue-500 text-white px-2 py-1 rounded'
             onClick={() => setShowNewWorkspaceForm(!showNewWorkspaceForm)}
           >
             New
@@ -101,7 +126,7 @@ export const ChatPage: FC = () => {
               onChange={(e) => setNewWorkspaceName(e.target.value)}
             />
             <button
-              className='bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors w-full'
+              className='bg-green-500 text-white px-2 py-1 rounded w-full'
               onClick={handleCreateWorkspace}
             >
               Create Workspace
@@ -128,10 +153,11 @@ export const ChatPage: FC = () => {
           </select>
         </div>
 
+        {/* Channels */}
         <div className='flex items-center justify-between mb-4'>
           <h3 className='text-xl font-bold'>Channels</h3>
           <button
-            className='bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors'
+            className='bg-blue-500 text-white px-2 py-1 rounded'
             onClick={() => setShowNewChannelForm(!showNewChannelForm)}
             disabled={!selectedWorkspaceId}
           >
@@ -148,7 +174,7 @@ export const ChatPage: FC = () => {
               onChange={(e) => setNewChannelName(e.target.value)}
             />
             <button
-              className='bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors w-full'
+              className='bg-green-500 text-white px-2 py-1 rounded w-full'
               onClick={handleCreateChannel}
             >
               Create Channel
@@ -170,6 +196,7 @@ export const ChatPage: FC = () => {
         </ul>
       </div>
 
+      {/* Main chat area */}
       <div className='flex-1 flex flex-col border-l border-gray-300 h-full overflow-hidden'>
         <div className='p-4 border-b border-gray-300'>
           <h2 className='text-2xl font-bold'>
@@ -178,41 +205,62 @@ export const ChatPage: FC = () => {
               : '(No Channel)'} Chat
           </h2>
         </div>
+
         <div className='flex-1 overflow-y-auto bg-gray-50 p-4'>
-          {messages?.map(msg => (
-            <div key={msg.id} className='flex items-start mb-4'>
-              {/* Avatar + Hover info */}
-              <div className='relative group mr-3'>
-                <img
+          {Array.isArray(messages) && (messages as ChatMessageWithReactions[]).map((msg: ChatMessageWithReactions) => (
+            <div key={msg.id} className='mb-4'>
+              <div className='flex items-start'>
+                <div className='relative group mr-3'>
+                  <img
                     src='https://placehold.co/32x32'
                     alt='User Avatar'
-                    className='w-8 h-8 rounded-full cursor-pointer'
-                />
-                <div
-                    className='absolute top-0 left-10 hidden group-hover:block bg-white p-2 border border-gray-200 shadow-md
-                            pointer-events-none group-hover:pointer-events-auto'
-                >
-                    <p className='text-sm mb-2'>@{msg.user?.username || 'Unknown'}</p>
+                    className='w-8 h-8 rounded-full'
+                  />
+                </div>
+                <div>
+                  <div className='text-sm text-gray-700 font-semibold'>
+                    {msg.user.displayName || msg.user.username || msg.user.email}
+                  </div>
+                  <div className='bg-white p-2 border border-gray-200'>
+                    {msg.content}
+                  </div>
+                </div>
+              </div>
+
+              {msg.reactions.length > 0 && (
+                <div className='ml-11 mt-1 flex gap-2 flex-wrap'>
+                  {msg.reactions.map((reaction: Reaction & { user: User }) => (
                     <button
-                    className='px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors'
-                    onClick={() => {}}
+                      key={reaction.id}
+                      className='bg-gray-200 px-1 rounded text-sm flex items-center gap-1'
+                      onClick={() => handleRemoveReaction(msg.id, reaction.emoji)}
+                      title='Click to remove your reaction'
                     >
-                    Send DM
+                      <span>{reaction.emoji}</span>
+                      {reaction.userId === user?.id && <span>(You)</span>}
                     </button>
+                  ))}
                 </div>
-            </div>
-              {/* Message content */}
-              <div>
-                <div className='text-sm text-gray-700 font-semibold mb-1'>
-                  {(msg.user as any)?.displayName ?? msg.user?.email ?? 'Unknown User'}
-                </div>
-                <div className='bg-white p-2 border border-gray-200'>
-                  {msg.content}
-                </div>
+              )}
+
+              <div className='ml-11 mt-1'>
+                <button
+                  className='text-xs text-blue-600 underline'
+                  onClick={() => handleAddReaction(msg.id, '👍')}
+                >
+                  +1
+                </button>
+                <button
+                  className='text-xs text-blue-600 underline ml-2'
+                  onClick={() => handleAddReaction(msg.id, '❤️')}
+                >
+                  ❤️
+                </button>
               </div>
             </div>
           ))}
         </div>
+
         <div className='p-4 border-t border-gray-300 flex gap-2'>
           <input
             className='border p-2 flex-1'
@@ -222,7 +270,7 @@ export const ChatPage: FC = () => {
             disabled={!selectedChannelId}
           />
           <button
-            className='px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 transition-colors'
+            className='px-4 py-2 bg-blue-500 text-white hover:bg-blue-600'
             onClick={handleSendMessage}
             disabled={!selectedChannelId}
           >

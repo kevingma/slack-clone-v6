@@ -61,16 +61,19 @@ model ChannelParticipant {
 }
 
 model ChatMessage {
-  id        Int      @id @default(autoincrement())
+  id        Int         @id @default(autoincrement())
   content   String
-  createdAt DateTime @default(now())
+  createdAt DateTime    @default(now())
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
   channelId Int?
-  channel   Channel? @relation(fields: [channelId], references: [id])
+  channel   Channel?    @relation(fields: [channelId], references: [id])
   
-  // Add this to fix missing opposite relation for Channel.parentMessage
+  // Existing childThreads relation
   childThreads Channel[] @relation("ThreadParentMessage")
+
+  // Add relation for Reaction
+  reactions Reaction[]
 }
 
 model Reaction {

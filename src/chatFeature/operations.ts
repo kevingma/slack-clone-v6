@@ -26,23 +26,33 @@ type WaspContext = {
  * getChatMessages
  */
 export async function getChatMessages(
-    { channelId }: { channelId: number },
-    context: WaspContext
-  ): Promise<(ChatMessage & { user: User })[]> {
-    if (!context.user) {
-      throw new HttpError(401, 'User not found')
-    }
-  
-    if (!channelId) {
-      throw new HttpError(400, 'No channelId provided')
-    }
-  
-    return context.entities.ChatMessage.findMany({
-      where: { channelId },
-      include: { user: true },
-      orderBy: { id: 'asc' },
-    })
+  { channelId }: { channelId: number },
+  context: WaspContext
+): Promise<
+  (ChatMessage & {
+    user: User
+    reactions: (Reaction & { user: User })[]
+  })[]
+> {
+  if (!context.user) {
+    throw new HttpError(401, 'User not found')
   }
+
+  if (!channelId) {
+    throw new HttpError(400, 'No channelId provided')
+  }
+
+  return context.entities.ChatMessage.findMany({
+    where: { channelId },
+    include: {
+      user: true,
+      reactions: {
+        include: { user: true },
+      },
+    },
+    orderBy: { id: 'asc' },
+  })
+}
 
 /**
  * createChatMessage
@@ -278,66 +288,66 @@ export async function getThreadChannel(
  * addReaction
  */
 export async function addReaction(
-    { messageId, emoji }: { messageId: number; emoji: string },
-    context: WaspContext
-  ): Promise<Reaction> {
-    if (!context.user) {
-      throw new HttpError(401, 'User not found')
-    }
-    if (!emoji.trim() || !messageId) {
-      throw new HttpError(400, 'Missing emoji or messageId')
-    }
-  
-    const message = await context.entities.ChatMessage.findUnique({
-      where: { id: messageId },
-    })
-    if (!message) {
-      throw new HttpError(404, 'Message not found.')
-    }
-  
-    return context.entities.Reaction.upsert({
-      where: {
-        userId_messageId_emoji: {
-          userId: context.user.id,
-          messageId,
-          emoji,
-        },
-      },
-      create: {
-        emoji,
+  { messageId, emoji }: { messageId: number; emoji: string },
+  context: WaspContext
+): Promise<Reaction> {
+  if (!context.user) {
+    throw new HttpError(401, 'User not found')
+  }
+  if (!emoji.trim() || !messageId) {
+    throw new HttpError(400, 'Missing emoji or messageId')
+  }
+
+  const message = await context.entities.ChatMessage.findUnique({
+    where: { id: messageId },
+  })
+  if (!message) {
+    throw new HttpError(404, 'Message not found.')
+  }
+
+  return context.entities.Reaction.upsert({
+    where: {
+      uniqueReaction: {
         userId: context.user.id,
         messageId,
+        emoji,
       },
-      update: {},
-    })
+    },
+    create: {
+      emoji,
+      userId: context.user.id,
+      messageId,
+    },
+    update: {},
+  })
+}
+
+/**
+ * removeReaction
+ */
+export async function removeReaction(
+  { messageId, emoji }: { messageId: number; emoji: string },
+  context: WaspContext
+): Promise<Reaction> {
+  if (!context.user) {
+    throw new HttpError(401, 'User not found')
   }
-  
-  /**
-   * removeReaction
-   */
-  export async function removeReaction(
-    { messageId, emoji }: { messageId: number; emoji: string },
-    context: WaspContext
-  ): Promise<Reaction> {
-    if (!context.user) {
-      throw new HttpError(401, 'User not found')
-    }
-    if (!emoji.trim() || !messageId) {
-      throw new HttpError(400, 'Missing emoji or messageId')
-    }
-  
-    const deletedReaction = await context.entities.Reaction.delete({
-      where: {
-        userId_messageId_emoji: {
-          userId: context.user.id,
-          messageId,
-          emoji,
-        },
+  if (!emoji.trim() || !messageId) {
+    throw new HttpError(400, 'Missing emoji or messageId')
+  }
+
+  const deletedReaction = await context.entities.Reaction.delete({
+    where: {
+      uniqueReaction: {
+        userId: context.user.id,
+        messageId,
+        emoji,
       },
-    })
-    if (!deletedReaction) {
-      throw new HttpError(404, 'Reaction not found.')
-    }
-  
-    return deletedReaction
+    },
+  })
+  if (!deletedReaction) {
+    throw new HttpError(404, 'Reaction not found.')
   }
+
+  return deletedReaction
+}
