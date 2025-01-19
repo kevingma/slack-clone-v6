@@ -404,7 +404,10 @@ type UploadAttachmentArgs = {
 
 const s3 = new S3Client({ region: process.env.AWS_S3_REGION })
 
-export async function uploadAttachment(args: UploadAttachmentArgs, context: { user?: User, entities: any }): Promise<Attachment> {
+export async function uploadAttachment(
+  args: UploadAttachmentArgs,
+  context: { user?: User, entities: any }
+): Promise<Attachment> {
   if (!context.user) {
     throw new HttpError(401, 'User not found')
   }
@@ -414,22 +417,23 @@ export async function uploadAttachment(args: UploadAttachmentArgs, context: { us
 
   // Decode base64 file content
   const buffer = Buffer.from(args.fileContent, 'base64')
-  
+
   const uniqueKey = `${uuidv4()}-${args.fileName}`
   const bucketName = process.env.AWS_S3_BUCKET as string
   if (!bucketName) {
     throw new HttpError(500, 'S3 bucket name not configured')
   }
 
-  // Upload to S3
+  // Upload to S3 with public-read ACL
   const command = new PutObjectCommand({
     Bucket: bucketName,
     Key: uniqueKey,
     Body: buffer,
+    ACL: 'public-read' // <-- Add this to allow public access
   })
   await s3.send(command)
 
-  // Build the accessible URL (if your bucket is public or using a presigned URL)
+  // Construct a public URL if your bucket is set to public
   const s3Url = `https://${bucketName}.s3.amazonaws.com/${uniqueKey}`
 
   // Create Attachment record
