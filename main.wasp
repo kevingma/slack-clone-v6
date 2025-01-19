@@ -149,3 +149,8 @@ action removeReaction {
   fn: import { removeReaction } from "@src/chatFeature/operations.ts",
   entities: [Reaction, ChatMessage, User, Workspace, WorkspaceUser, Channel]
 }
+
+action uploadAttachment {
+  fn: import { uploadAttachment } from "@src/chatFeature/operations.ts",
+  entities: [Attachment, ChatMessage, User, Workspace, WorkspaceUser, Reaction]
+}

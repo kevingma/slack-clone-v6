@@ -87,3 +87,17 @@ model Reaction {
 
   @@unique([userId, messageId, emoji], name: "uniqueReaction")
 }
+
+model Attachment {
+  id          Int          @id @default(autoincrement())
+  url         String
+  filename    String?
+  createdAt   DateTime     @default(now())
+
+  // Relations
+  messageId   Int?
+  message     ChatMessage? @relation(fields: [messageId], references: [id])
+
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id])
+}
