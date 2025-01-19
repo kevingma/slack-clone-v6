@@ -68,12 +68,15 @@ model ChatMessage {
   user      User        @relation(fields: [userId], references: [id])
   channelId Int?
   channel   Channel?    @relation(fields: [channelId], references: [id])
-  
+
   // Relation for child threads
   childThreads Channel[] @relation("ThreadParentMessage")
 
   // Add relation for Reaction
   reactions Reaction[]
+
+  // ADD THIS RELATION:
+  attachments Attachment[]
 }
 
 model Reaction {
