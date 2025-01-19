@@ -9,9 +9,11 @@ import {
   getChatMessages,
   createChatMessage,
   addReaction,
-  removeReaction
+  removeReaction,
+  createThreadChannel,
+  getThreadChannel
 } from 'wasp/client/operations'
-import type { Workspace, User, Reaction, ChatMessage } from 'wasp/entities'
+import type { Workspace, User, Reaction, ChatMessage, Channel } from 'wasp/entities'
 
 type ChatMessageWithReactions = ChatMessage & {
   user: User
@@ -22,6 +24,10 @@ export const ChatPage: FC = () => {
   const { data: user } = useAuth()
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<number | null>(null)
   const [selectedChannelId, setSelectedChannelId] = useState<number | undefined>()
+
+  // Thread channel state
+  const [selectedThreadChannelId, setSelectedThreadChannelId] = useState<number | null>(null)
+  const [threadContent, setThreadContent] = useState('')
 
   const { data: workspaces = [], refetch: refetchWorkspaces } = useQuery(getWorkspaces)
   const { data: channels = [], refetch: refetchChannels } = useQuery(
@@ -36,18 +42,35 @@ export const ChatPage: FC = () => {
     { enabled: selectedChannelId !== undefined }
   )
 
+  // Thread messages query
+  const { data: threadMessages = [], refetch: refetchThreadMessages } = useQuery(
+    getThreadChannel,
+    selectedThreadChannelId !== null ? { threadChannelId: selectedThreadChannelId } : undefined,
+    { enabled: selectedThreadChannelId !== null }
+  )
+
   const [content, setContent] = useState('')
   const [newChannelName, setNewChannelName] = useState('')
   const [showNewChannelForm, setShowNewChannelForm] = useState(false)
   const [newWorkspaceName, setNewWorkspaceName] = useState('')
   const [showNewWorkspaceForm, setShowNewWorkspaceForm] = useState(false)
 
+  // Poll for main channel messages
   useEffect(() => {
     const interval = setInterval(() => {
       if (selectedChannelId) refetchMessages()
     }, 2000)
     return () => clearInterval(interval)
   }, [selectedChannelId, refetchMessages])
+
+  // Poll for thread messages
+  useEffect(() => {
+    if (!selectedThreadChannelId) return
+    const interval = setInterval(() => {
+      refetchThreadMessages()
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [selectedThreadChannelId, refetchThreadMessages])
 
   const handleSendMessage = async () => {
     if (!content.trim() || !selectedChannelId) return
@@ -102,6 +125,34 @@ export const ChatPage: FC = () => {
     }
   }
 
+  const handleOpenThread = async (messageId: number) => {
+    if (!selectedWorkspaceId) return
+    try {
+      // Create a new thread channel (or retrieve existing if your server logic does so).
+      const threadChannel: Channel = await createThreadChannel({
+        parentMessageId: messageId,
+        workspaceId: selectedWorkspaceId
+      })
+      setSelectedThreadChannelId(threadChannel.id)
+    } catch (err: any) {
+      window.alert('Error creating/opening thread: ' + err.message)
+    }
+  }
+
+  const handleSendThreadMessage = async () => {
+    if (!threadContent.trim() || !selectedThreadChannelId) return
+    try {
+      await createChatMessage({
+        content: threadContent,
+        channelId: selectedThreadChannelId
+      })
+      setThreadContent('')
+      refetchThreadMessages()
+    } catch (err: any) {
+      window.alert('Error sending thread message: ' + err.message)
+    }
+  }
+
   return (
     <div className='w-full h-full flex'>
       {/* Left sidebar */}
@@ -140,6 +191,7 @@ export const ChatPage: FC = () => {
               const val = e.target.value ? parseInt(e.target.value, 10) : null
               setSelectedWorkspaceId(val)
               setSelectedChannelId(undefined)
+              setSelectedThreadChannelId(null)
             }}
           >
             <option value=''>-- None --</option>
@@ -184,7 +236,10 @@ export const ChatPage: FC = () => {
               className={`cursor-pointer p-2 hover:bg-gray-300 ${
                 channel.id === selectedChannelId ? 'bg-gray-300 font-semibold' : ''
               }`}
-              onClick={() => setSelectedChannelId(channel.id)}
+              onClick={() => {
+                setSelectedChannelId(channel.id)
+                setSelectedThreadChannelId(null)
+              }}
             >
               {channel.name}
             </li>
@@ -239,7 +294,7 @@ export const ChatPage: FC = () => {
                     ))}
                   </div>
                 )}
-                <div className='ml-11 mt-1'>
+                <div className='ml-11 mt-1 flex items-center gap-3'>
                   <button
                     className='text-xs text-blue-600 underline'
                     onClick={() => handleAddReaction(msg.id, '👍')}
@@ -247,10 +302,17 @@ export const ChatPage: FC = () => {
                     +1
                   </button>
                   <button
-                    className='text-xs text-blue-600 underline ml-2'
+                    className='text-xs text-blue-600 underline'
                     onClick={() => handleAddReaction(msg.id, '❤️')}
                   >
                     ❤️
+                  </button>
+                  {/* Open thread button */}
+                  <button
+                    className='text-xs text-blue-600 underline'
+                    onClick={() => handleOpenThread(msg.id)}
+                  >
+                    Thread
                   </button>
                 </div>
               </div>
@@ -281,6 +343,60 @@ export const ChatPage: FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Thread panel (right side) */}
+      {selectedThreadChannelId && (
+        <div className='w-80 border-l border-gray-300 flex flex-col'>
+          <div className='p-4 border-b border-gray-300'>
+            <h2 className='text-lg font-bold'>Thread</h2>
+          </div>
+          <div className='flex-1 overflow-y-auto bg-gray-50 p-4 min-h-0'>
+            {Array.isArray(threadMessages) &&
+              threadMessages.map((msg: ChatMessage & { user: User }) => (
+                <div key={msg.id} className='mb-4'>
+                  <div className='flex items-start'>
+                    <div className='relative group mr-3'>
+                      <img
+                        src='https://placehold.co/32x32'
+                        alt='User Avatar'
+                        className='w-8 h-8 rounded-full'
+                      />
+                    </div>
+                    <div>
+                      <div className='text-sm text-gray-700 font-semibold'>
+                        {msg.user.displayName || msg.user.username || msg.user.email}
+                      </div>
+                      <div className='bg-white p-2 border border-gray-200'>
+                        {msg.content}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
+          {/* Thread message input */}
+          <div className='p-4 border-t border-gray-300 flex gap-2'>
+            <input
+              className='border p-2 flex-1'
+              placeholder='Reply in thread...'
+              value={threadContent}
+              onChange={(e) => setThreadContent(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSendThreadMessage()
+                }
+              }}
+            />
+            <button
+              className='px-4 py-2 bg-blue-500 text-white hover:bg-blue-600'
+              onClick={handleSendThreadMessage}
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

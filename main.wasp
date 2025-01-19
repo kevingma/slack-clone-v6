@@ -79,12 +79,12 @@ action deleteChannel {
 
 action createThreadChannel {
   fn: import { createThreadChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser, Reaction]   // ADDED Reaction
+  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser, Reaction]
 }
 
 query getThreadChannel {
   fn: import { getThreadChannel } from "@src/chatFeature/operations.ts",
-  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser, Reaction]   // ADDED Reaction
+  entities: [Channel, ChatMessage, User, Workspace, WorkspaceUser, Reaction]
 }
 
 //#region User Feature

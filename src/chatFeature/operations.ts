@@ -331,6 +331,7 @@ export async function addReaction(
     throw new HttpError(400, 'Missing emoji or messageId')
   }
 
+  // Ensure the message exists
   const message = await context.entities.ChatMessage.findUnique({
     where: { id: messageId },
   })
@@ -338,6 +339,7 @@ export async function addReaction(
     throw new HttpError(404, 'Message not found.')
   }
 
+  // Upsert the reaction so duplicate reacts won't create duplicates
   return context.entities.Reaction.upsert({
     where: {
       uniqueReaction: {
@@ -354,6 +356,7 @@ export async function addReaction(
     update: {},
   })
 }
+
 
 /**
  * removeReaction

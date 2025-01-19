@@ -69,7 +69,7 @@ model ChatMessage {
   channelId Int?
   channel   Channel?    @relation(fields: [channelId], references: [id])
   
-  // Existing childThreads relation
+  // Relation for child threads
   childThreads Channel[] @relation("ThreadParentMessage")
 
   // Add relation for Reaction
