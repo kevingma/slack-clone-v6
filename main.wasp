@@ -165,3 +165,19 @@ page SearchPage {
   authRequired: true,
   component: import { SearchPage } from "@src/searchFeature/searchPage.tsx"
 }
+
+action initializeIndex {
+  fn: import { initializeIndex } from "@src/ragFeature/operations.ts",
+  entities: []  // no direct DB usage, everything is done via Pinecone
+}
+
+action askRag {
+  fn: import { askRag } from "@src/ragFeature/operations.ts",
+  entities: []  // same note as above
+}
+
+route RagPageRoute { path: "/rag-demo", to: RagPage }
+page RagPage {
+  authRequired: true,
+  component: import { RagPage } from "@src/ragFeature/RagPage.tsx"
+}

@@ -66,7 +66,7 @@ export const SearchPage: FC = () => {
                     ? `[DM: ${msg.channel.name}]`
                     : `[Workspace Channel: ${msg.channel.name}]`}
                 </div>
-                <div className='mt-1'>{msg.content}</div>
+                <div className='mt-1 text-black'>{msg.content}</div>
                 {msg.attachments.length > 0 && (
                   <div className='mt-2 flex flex-wrap gap-2'>
                     {msg.attachments.map((att) => (
