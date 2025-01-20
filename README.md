@@ -45,6 +45,8 @@ A Slack-like real-time chat application built with [Wasp](https://wasp-lang.dev/
 - **Message Attachments**  
   Upload files to any message via Amazon S3. View or download them directly.
 
+- **Workspace SpecificSearch**
+
 - **Authentication**  
   - **Local (username/email + password)**  
   - **Google OAuth**  
@@ -56,7 +58,7 @@ A Slack-like real-time chat application built with [Wasp](https://wasp-lang.dev/
 
 - **AI Mentions**  
   - Mentions of `@DisplayName` can trigger an AI-based auto-response if that user has a persona. 
-  - The system can dynamically generate a “persona” for a user based on past messages.
+  - The system can dynamically generate a “persona” for a user based on past messages. Context aware
 
 - **TailwindCSS Styling**  
   Use Tailwind classes for quick UI development.
