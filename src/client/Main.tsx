@@ -6,7 +6,7 @@ import { Link } from 'wasp/client/router'
 import { Outlet } from 'react-router-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from 'wasp/client/auth'
-import { MessageSquare, Send, User } from 'lucide-react'
+import { MessageSquare, Send, User, BookOpen } from 'lucide-react'
 
 export const Main: FC = () => {
   const { data: user } = useAuth()
@@ -15,7 +15,12 @@ export const Main: FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    if (user && (!(user as any).username || !(user as any).displayName) && location.pathname !== '/onboarding') {
+    // If user is missing required fields, redirect to onboarding
+    if (
+      user &&
+      (!(user as any).username || !(user as any).displayName) &&
+      location.pathname !== '/onboarding'
+    ) {
       navigate('/onboarding')
     }
   }, [user, location.pathname, navigate])
@@ -29,7 +34,7 @@ export const Main: FC = () => {
 
   return (
     <div className='h-screen flex flex-col bg-gray-900 text-white'>
-      {/* Top Bar - darkest */}
+      {/* Top Bar */}
       <header className='bg-gray-900 text-white p-3 flex items-center'>
         {/* Logo on the left */}
         <Link to='/'>
@@ -46,7 +51,6 @@ export const Main: FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            {/* Removed the "Search" button */}
           </form>
         </div>
       </header>
@@ -63,6 +67,10 @@ export const Main: FC = () => {
             <Link to='/dm' className='flex flex-col items-center group'>
               <Send size={24} className='text-gray-400 group-hover:text-white' />
               <span className='text-xs text-gray-400 group-hover:text-white mt-1'>DMs</span>
+            </Link>
+            <Link to='/rag' className='flex flex-col items-center group'>
+              <BookOpen size={24} className='text-gray-400 group-hover:text-white' />
+              <span className='text-xs text-gray-400 group-hover:text-white mt-1'>RAG</span>
             </Link>
           </div>
           <div>

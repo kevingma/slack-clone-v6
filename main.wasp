@@ -166,18 +166,18 @@ page SearchPage {
   component: import { SearchPage } from "@src/searchFeature/searchPage.tsx"
 }
 
-action initializeIndex {
-  fn: import { initializeIndex } from "@src/ragFeature/operations.ts",
-  entities: []  // no direct DB usage, everything is done via Pinecone
+action ingestKnowledge {
+  fn: import { ingestKnowledge } from "@src/ragFeature/operations.ts",
+  entities: []
 }
 
-action askRag {
-  fn: import { askRag } from "@src/ragFeature/operations.ts",
-  entities: []  // same note as above
+query askKnowledge {
+  fn: import { askKnowledge } from "@src/ragFeature/operations.ts",
+  entities: []
 }
 
-route RagPageRoute { path: "/rag-demo", to: RagPage }
+route RagPageRoute { path: "/rag", to: RagPage }
 page RagPage {
   authRequired: true,
-  component: import { RagPage } from "@src/ragFeature/RagPage.tsx"
+  component: import { RagPage } from "@src/ragFeature/ragPage.tsx"
 }
