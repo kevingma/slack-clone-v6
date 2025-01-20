@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useState, useRef } from 'react'
 import { useAuth } from 'wasp/client/auth'
 import {
   useQuery,
@@ -46,6 +46,10 @@ export const ChatPage: FC = () => {
     { enabled: selectedThreadChannelId !== null }
   )
 
+  // Scroll refs:
+  const mainMessagesRef = useRef<HTMLDivElement | null>(null)
+  const threadMessagesRef = useRef<HTMLDivElement | null>(null)
+
   // Auto-select first workspace if any exist
   useEffect(() => {
     if (workspaces.length > 0 && selectedWorkspaceId === null) {
@@ -67,6 +71,7 @@ export const ChatPage: FC = () => {
   const [showNewWorkspaceForm, setShowNewWorkspaceForm] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
+  // Poll for new messages in the current channel
   useEffect(() => {
     const interval = setInterval(() => {
       if (selectedChannelId) refetchMessages()
@@ -74,6 +79,7 @@ export const ChatPage: FC = () => {
     return () => clearInterval(interval)
   }, [selectedChannelId, refetchMessages])
 
+  // Poll for new messages in the current thread
   useEffect(() => {
     if (!selectedThreadChannelId) return
     const interval = setInterval(() => {
@@ -81,6 +87,20 @@ export const ChatPage: FC = () => {
     }, 2000)
     return () => clearInterval(interval)
   }, [selectedThreadChannelId, refetchThreadMessages])
+
+  // Scroll to bottom of main chat whenever messages change or channel changes
+  useEffect(() => {
+    if (mainMessagesRef.current) {
+      mainMessagesRef.current.scrollTop = mainMessagesRef.current.scrollHeight
+    }
+  }, [messages, selectedChannelId])
+
+  // Scroll to bottom of thread whenever thread messages change or thread channel changes
+  useEffect(() => {
+    if (threadMessagesRef.current) {
+      threadMessagesRef.current.scrollTop = threadMessagesRef.current.scrollHeight
+    }
+  }, [threadMessages, selectedThreadChannelId])
 
   const handleSendMessage = async () => {
     if (!selectedChannelId) return
@@ -189,7 +209,7 @@ export const ChatPage: FC = () => {
 
   return (
     <div className='w-full h-full flex'>
-      {/* Left sidebar - now a light grey */}
+      {/* Left sidebar */}
       <div className='w-64 bg-gray-300 text-black flex flex-col p-4 h-full'>
         <div className='mb-4 flex items-center justify-between'>
           <h3 className='text-xl font-bold'>Workspaces</h3>
@@ -283,9 +303,9 @@ export const ChatPage: FC = () => {
         </ul>
       </div>
 
-      {/* Main chat area - use the same light grey */}
+      {/* Main chat area */}
       <div className='flex-1 flex flex-col border-l border-gray-400 bg-gray-200 text-black'>
-        {/* Channel header - mild grey */}
+        {/* Channel header */}
         <div className='p-4 border-b border-gray-400 bg-gray-300 text-black'>
           <h2 className='text-2xl font-bold'>
             {selectedChannelId
@@ -294,8 +314,11 @@ export const ChatPage: FC = () => {
           </h2>
         </div>
 
-        {/* Messages list - light grey */}
-        <div className='flex-1 overflow-y-auto bg-gray-200 p-4 min-h-0'>
+        {/* Messages list */}
+        <div
+          className='flex-1 overflow-y-auto bg-gray-200 p-4 min-h-0'
+          ref={mainMessagesRef}
+        >
           {Array.isArray(messages) &&
             (messages as ChatMessageWithReactionsAndAttachments[]).map(msg => (
               <div key={msg.id} className='mb-4'>
@@ -370,7 +393,7 @@ export const ChatPage: FC = () => {
             ))}
         </div>
 
-        {/* Bottom input row - also light grey */}
+        {/* Bottom input row */}
         <div className='p-4 border-t border-gray-400 flex gap-2 bg-gray-200'>
           <input
             type='file'
@@ -411,10 +434,20 @@ export const ChatPage: FC = () => {
       {/* Thread panel on the right side */}
       {selectedThreadChannelId && (
         <div className='w-80 border-l border-gray-400 flex flex-col bg-gray-200'>
-          <div className='p-4 border-b border-gray-400 bg-gray-300 text-black'>
+          {/* Header with close button */}
+          <div className='p-4 border-b border-gray-400 bg-gray-300 text-black flex items-center justify-between'>
             <h2 className='text-lg font-bold'>Thread</h2>
+            <button
+              className='px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-500 transition-colors'
+              onClick={() => setSelectedThreadChannelId(null)}
+            >
+              Close
+            </button>
           </div>
-          <div className='flex-1 overflow-y-auto bg-gray-200 p-4 min-h-0'>
+          <div
+            className='flex-1 overflow-y-auto bg-gray-200 p-4 min-h-0'
+            ref={threadMessagesRef}
+          >
             {Array.isArray(threadMessages) &&
               threadMessages.map(
                 (msg: ChatMessage & { user: User; attachments: Attachment[] }) => (

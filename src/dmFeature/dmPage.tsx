@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useState, useRef } from 'react'
 import { useAuth } from 'wasp/client/auth'
 import {
   useQuery,
@@ -17,11 +17,17 @@ export const DmPage: FC = () => {
   const [dmUserEmail, setDmUserEmail] = useState('')
 
   const { data: dmChannels = [], refetch: refetchDmChannels } = useQuery(getDmChannels)
-  const { data: messages, refetch: refetchMessages } = useQuery(
+  const {
+    data: messages,
+    refetch: refetchMessages
+  } = useQuery(
     getChatMessages,
     { channelId: selectedDmChannelId || 0 },
     { enabled: !!selectedDmChannelId }
   )
+
+  // Reference for scrolling
+  const dmMessagesRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -29,6 +35,13 @@ export const DmPage: FC = () => {
     }, 2000)
     return () => clearInterval(interval)
   }, [selectedDmChannelId, refetchMessages])
+
+  // Auto-scroll to bottom whenever messages or selected DM changes
+  useEffect(() => {
+    if (dmMessagesRef.current) {
+      dmMessagesRef.current.scrollTop = dmMessagesRef.current.scrollHeight
+    }
+  }, [messages, selectedDmChannelId])
 
   const handleSendMessage = async () => {
     if (!content.trim() || !selectedDmChannelId) return
@@ -55,7 +68,7 @@ export const DmPage: FC = () => {
 
   return (
     <div className='w-full h-full overflow-hidden flex'>
-      {/* DM Sidebar - now light grey */}
+      {/* DM Sidebar */}
       <div className='w-64 bg-gray-300 text-black flex flex-col p-4 h-full'>
         <div className='mb-4 flex items-center justify-between'>
           <h3 className='text-xl font-bold'>DMs</h3>
@@ -99,17 +112,22 @@ export const DmPage: FC = () => {
         </ul>
       </div>
 
-      {/* DM Chat Messages - also light grey */}
+      {/* DM Chat Messages */}
       <div className='flex-1 flex flex-col border-l border-gray-400 bg-gray-200 text-black'>
-        {/* Box that has the channel (DM) name - mild grey */}
+        {/* Channel (DM) name */}
         <div className='p-4 border-b border-gray-400 bg-gray-300 text-black'>
           <h2 className='text-2xl font-bold'>
             {selectedDmChannelId
               ? dmChannels.find((ch: any) => ch.id === selectedDmChannelId)?.name
-              : '(No DM)'}  
+              : '(No DM)'}
           </h2>
         </div>
-        <div className='flex-1 overflow-y-auto bg-gray-200 p-4'>
+
+        {/* Messages container with ref */}
+        <div
+          className='flex-1 overflow-y-auto bg-gray-200 p-4'
+          ref={dmMessagesRef}
+        >
           {messages?.map((msg: any) => (
             <div key={msg.id} className='flex items-start mb-4'>
               <img
@@ -128,6 +146,7 @@ export const DmPage: FC = () => {
             </div>
           ))}
         </div>
+
         <div className='p-4 border-t border-gray-400 flex gap-2 bg-gray-200'>
           <input
             className='border border-gray-400 bg-gray-200 p-2 flex-1 rounded-md placeholder-gray-500 text-black'
