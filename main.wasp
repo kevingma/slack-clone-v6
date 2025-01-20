@@ -154,3 +154,14 @@ action uploadAttachment {
   fn: import { uploadAttachment } from "@src/chatFeature/operations.ts",
   entities: [Attachment, ChatMessage, User, Workspace, WorkspaceUser, Reaction]
 }
+
+query searchMessages {
+  fn: import { searchMessages } from "@src/searchFeature/operations.ts",
+  entities: [ChatMessage, Channel, Workspace, WorkspaceUser, User, Reaction, Attachment, ChannelParticipant]
+}
+
+route SearchPageRoute { path: "/search", to: SearchPage }
+page SearchPage {
+  authRequired: true,
+  component: import { SearchPage } from "@src/searchFeature/searchPage.tsx"
+}

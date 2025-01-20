@@ -1,114 +1,78 @@
 import type { FC } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import './Main.css'
 import logo from './../../public/logo.webp'
 import { Link } from 'wasp/client/router'
+import { Outlet } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from 'wasp/client/auth'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { MessageSquare, Send, User } from 'lucide-react'
 
 export const Main: FC = () => {
   const { data: user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    if (
-      user &&
-      (!(user as any).username || !(user as any).displayName) &&
-      location.pathname !== '/onboarding'
-    ) {
+    if (user && (!(user as any).username || !(user as any).displayName) && location.pathname !== '/onboarding') {
       navigate('/onboarding')
     }
   }, [user, location.pathname, navigate])
 
-  const handleProfileClick = async () => {
-    navigate('/profile')
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!searchTerm.trim()) return
+    navigate(`/search?query=${encodeURIComponent(searchTerm)}`)
+    setSearchTerm('')
   }
 
   return (
-    <div className='h-screen flex'>
-      {/* Vertical Menu Bar */}
-      <nav className='bg-violet-800 w-16 flex flex-col items-center justify-between py-4'>
-        {/* Top Section: Clickable Logo */}
-        <div className='flex flex-col items-center'>
-          <Link to='/'>
-            <img
-              src={logo}
-              alt='Wasp Logo'
-              className='w-8 h-8 mb-4'
-            />
-          </Link>
-          {/* New Chat button */}
-          <Link
-            to='/chat'
-            className='text-white hover:text-gray-300 transition-colors flex flex-col items-center mb-4'
-          >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              fill='none'
-              viewBox='0 0 24 24'
-              strokeWidth={1.5}
-              stroke='currentColor'
-              className='w-6 h-6'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                d='M2.25 15a2.25 2.25 0 0 0 2.25 2.25h3.75l3.75 3.75V17.25h4.5A2.25 2.25 0 0 0 18.75 15V6.75A2.25 2.25 0 0 0 16.5 4.5h-12A2.25 2.25 0 0 0 2.25 6.75v8.25z'
-              />
-            </svg>
-            Chat
-          </Link>
-          {/* DMs */}
-          <Link
-            to='/dm'
-            className='text-white hover:text-gray-300 transition-colors flex flex-col items-center'
-          >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              fill='none'
-              viewBox='0 0 24 24'
-              strokeWidth={1.5}
-              stroke='currentColor'
-              className='w-6 h-6'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                d='M21.75 7.5l-9 4.5-9-4.5m18 9-9 4.5-9-4.5'
-              />
-            </svg>
-            DMs
-          </Link>
-        </div>
+    <div className='h-screen flex flex-col bg-gray-900 text-white'>
+      {/* Top Bar - darkest */}
+      <header className='bg-gray-900 text-white p-3 flex items-center'>
+        {/* Logo on the left */}
+        <Link to='/'>
+          <img src={logo} alt='App Logo' className='w-8 h-8' />
+        </Link>
 
-        {/* Bottom Section: Profile Icon -> Navigate to /profile */}
-        {user && (
-          <button
-            onClick={handleProfileClick}
-            className='text-white hover:text-gray-300 transition-colors'
-          >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              fill='none'
-              viewBox='0 0 24 24'
-              strokeWidth={1.5}
-              stroke='currentColor'
-              className='w-6 h-6'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                d='M15.75 9A3.75 3.75 0 1112 5.25 3.75 3.75 0 0115.75 9zm0 0v3.75m-7.5-3.75v3.75m1.5 2.25a6 6 0 1112 0 6 6 0 01-12 0z'
-              />
-            </svg>
-          </button>
-        )}
-      </nav>
+        {/* Centered search box */}
+        <div className='flex-1 flex justify-center'>
+          <form onSubmit={handleSearchSubmit}>
+            <input
+              type='text'
+              placeholder='Search messages...'
+              className='px-2 py-1 bg-gray-700 text-white placeholder-gray-400 rounded-md border border-gray-600'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {/* Removed the "Search" button */}
+          </form>
+        </div>
+      </header>
 
       {/* Main Content Area */}
-      {/* Removed `overflow-hidden` here */}
-      <div className='flex-1 flex'>
+      <div className='flex flex-1 overflow-hidden'>
+        {/* Slim Left Sidebar */}
+        <aside className='w-16 bg-gray-900 text-white flex flex-col items-center justify-between py-4'>
+          <div className='flex flex-col items-center gap-6'>
+            <Link to='/chat' className='flex flex-col items-center group'>
+              <MessageSquare size={24} className='text-gray-400 group-hover:text-white' />
+              <span className='text-xs text-gray-400 group-hover:text-white mt-1'>Chat</span>
+            </Link>
+            <Link to='/dm' className='flex flex-col items-center group'>
+              <Send size={24} className='text-gray-400 group-hover:text-white' />
+              <span className='text-xs text-gray-400 group-hover:text-white mt-1'>DMs</span>
+            </Link>
+          </div>
+          <div>
+            <Link to='/profile' className='flex flex-col items-center group mb-4'>
+              <User size={24} className='text-gray-400 group-hover:text-white' />
+            </Link>
+          </div>
+        </aside>
+
+        {/* Outlet for pages */}
         <Outlet />
       </div>
     </div>

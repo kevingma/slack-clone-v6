@@ -23,38 +23,40 @@ export const ProfilePage: FC = () => {
     navigate('/login')
   }
 
-  if (!user) return <div>Loading...</div>
+  if (!user) return <div className='min-h-screen bg-gray-900 text-white p-4'>Loading...</div>
 
   return (
-    <div className='max-w-lg mx-auto p-4 space-y-4'>
-      <h1 className='text-2xl font-bold'>Profile</h1>
-      <p><strong>Email:</strong> {user.email}</p>
-      {user.username && <p><strong>Username:</strong> {user.username}</p>}
+    <div className='min-h-screen bg-gray-900 text-white flex items-center justify-center p-4'>
+      <div className='max-w-lg w-full p-6 bg-gray-800 rounded-md border border-gray-700 space-y-4'>
+        <h1 className='text-2xl font-bold'>Profile</h1>
+        <p><strong>Email:</strong> {user.email}</p>
+        {user.username && <p><strong>Username:</strong> {user.username}</p>}
 
-      <div>
-        <label className='block mb-1 font-medium'>Display Name</label>
-        <input
-          className='border p-2 w-full'
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-        />
+        <div>
+          <label className='block mb-1 font-medium'>Display Name</label>
+          <input
+            className='border border-gray-600 bg-gray-700 text-white p-2 w-full rounded-md placeholder-gray-400'
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+          />
+        </div>
+
+        <button
+          onClick={handleSave}
+          className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors'
+        >
+          Save
+        </button>
+
+        <hr className='border-gray-600' />
+
+        <button
+          onClick={handleLogout}
+          className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-500 transition-colors'
+        >
+          Logout
+        </button>
       </div>
-
-      <button
-        onClick={handleSave}
-        className='px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 transition-colors'
-      >
-        Save
-      </button>
-
-      <hr />
-
-      <button
-        onClick={handleLogout}
-        className='px-4 py-2 bg-red-500 text-white hover:bg-red-600 transition-colors'
-      >
-        Logout
-      </button>
     </div>
   )
 }
