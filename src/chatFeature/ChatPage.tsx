@@ -46,6 +46,20 @@ export const ChatPage: FC = () => {
     { enabled: selectedThreadChannelId !== null }
   )
 
+  // Auto-select first workspace if any exist
+  useEffect(() => {
+    if (workspaces.length > 0 && selectedWorkspaceId === null) {
+      setSelectedWorkspaceId(workspaces[0].id)
+    }
+  }, [workspaces, selectedWorkspaceId])
+
+  // Once a workspace is selected, auto-select the first channel if any exist
+  useEffect(() => {
+    if (channels.length > 0 && selectedChannelId === undefined) {
+      setSelectedChannelId(channels[0].id)
+    }
+  }, [channels, selectedChannelId])
+
   const [content, setContent] = useState('')
   const [newChannelName, setNewChannelName] = useState('')
   const [showNewChannelForm, setShowNewChannelForm] = useState(false)
@@ -214,7 +228,9 @@ export const ChatPage: FC = () => {
               setSelectedThreadChannelId(null)
             }}
           >
-            <option value=''>-- None --</option>
+            {workspaces.length === 0 && (
+              <option value=''>No Workspaces</option>
+            )}
             {workspaces.map(ws => (
               <option key={ws.id} value={ws.id}>
                 {ws.name}
@@ -392,7 +408,7 @@ export const ChatPage: FC = () => {
         </div>
       </div>
 
-      {/* Thread panel on the right side (no changes to color scheme here or we can match the rest) */}
+      {/* Thread panel on the right side */}
       {selectedThreadChannelId && (
         <div className='w-80 border-l border-gray-400 flex flex-col bg-gray-200'>
           <div className='p-4 border-b border-gray-400 bg-gray-300 text-black'>
