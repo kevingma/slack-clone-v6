@@ -2,6 +2,7 @@ import { HttpError } from 'wasp/server'
 import type { IngestKnowledge, AskKnowledge } from 'wasp/server/operations'
 import fs from 'fs'
 import path from 'path'
+import * as url from 'url'
 
 /**
  * We'll use the official Pinecone client for Node.js / TS:
@@ -27,6 +28,9 @@ const EMBEDDING_DIM = 1536
 
 // 4. Use a default namespace or any custom one
 const RAG_NAMESPACE = 'knowledgeDocs'
+
+const __filename = url.fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // -------------------------------------
 // Helpers for chunking, embedding, etc.
@@ -163,31 +167,28 @@ async function generateAnswer(query: string, retrievedChunks: string[]): Promise
 // Reads knowledgeDocs.md, chunks it, embeds it, and stores in Pinecone.
 // -----------------------------------------------------------
 export const ingestKnowledge: IngestKnowledge<undefined, string> = async (_args, _context) => {
-  // We do NOT need context.user check if it's open to all. Or do:
-  // if (!context.user) { throw new HttpError(401, 'Not authenticated') }
-
-  // 1. Load the knowledge doc from local filesystem
-  const docPath = path.join(process.cwd(), 'knowledge', 'knowledgeDocs.md')
-  if (!fs.existsSync(docPath)) {
-    throw new HttpError(404, 'knowledgeDocs.md not found in /knowledge folder.')
+    // Updated path to the local 'knowledgeDocs.md'
+    const docPath = path.join(__dirname, './knowledgeDocs.md')
+  
+    if (!fs.existsSync(docPath)) {
+      throw new HttpError(404, 'knowledgeDocs.md not found in ragFeature folder.')
+    }
+    const fullText = fs.readFileSync(docPath, 'utf-8')
+    if (!fullText.trim()) {
+      throw new HttpError(400, 'knowledgeDocs.md is empty.')
+    }
+  
+    // 2. Chunk the text
+    const chunks = chunkTexts(fullText, 1000, 200)
+  
+    // 3. Embed each chunk
+    const chunkEmbeds = await embedTexts(chunks)
+  
+    // 4. Store into Pinecone
+    await storeEmbeddingsToPinecone(chunkEmbeds)
+  
+    return `Successfully ingested ${chunkEmbeds.length} chunks into Pinecone index: ${PINECONE_INDEX_NAME}`
   }
-  const fullText = fs.readFileSync(docPath, 'utf-8')
-  if (!fullText.trim()) {
-    throw new HttpError(400, 'knowledgeDocs.md is empty.')
-  }
-
-  // 2. Chunk the text
-  const chunks = chunkTexts(fullText, 1000, 200)
-
-  // 3. Embed each chunk
-  const chunkEmbeds = await embedTexts(chunks)
-
-  // 4. Store into Pinecone
-  //    (Ensure your index is created once, e.g. manually or via a script.)
-  await storeEmbeddingsToPinecone(chunkEmbeds)
-
-  return `Successfully ingested ${chunkEmbeds.length} chunks into Pinecone index: ${PINECONE_INDEX_NAME}`
-}
 
 // -----------------------------------------------------------
 // Wasp Query: askKnowledge
