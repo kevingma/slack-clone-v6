@@ -248,37 +248,79 @@ export async function deleteChannel(
  * createThreadChannel
  */
 export async function createThreadChannel(
-  { parentMessageId, workspaceId }: { parentMessageId: number; workspaceId: number },
-  context: WaspContext
+  { parentMessageId }: { parentMessageId: number },
+  context: {
+    user?: User
+    entities: {
+      User: any
+      Workspace: any
+      WorkspaceUser: any
+      Channel: any
+      ChatMessage: any
+      Reaction: any
+    }
+  }
 ): Promise<Channel> {
   if (!context.user) {
     throw new HttpError(401, 'User not found')
   }
 
-  // Check user membership in the target workspace
-  const membership = await context.entities.WorkspaceUser.findFirst({
-    where: { userId: context.user.id, workspaceId },
-  })
-  if (!membership) {
-    throw new HttpError(403, 'Not a member of this workspace.')
-  }
-
-  // Ensure parent message exists
+  // Fetch the parent message, including its channel
   const parentMessage = await context.entities.ChatMessage.findUnique({
     where: { id: parentMessageId },
+    include: { channel: true }
   })
-  if (!parentMessage) {
-    throw new HttpError(404, 'Parent message not found.')
+  if (!parentMessage || !parentMessage.channel) {
+    throw new HttpError(404, 'Parent message or its channel not found.')
   }
 
-  // Create the new thread channel
+  const parentChannel = parentMessage.channel
+
+  // If the channel belongs to a workspace, verify membership
+  if (parentChannel.workspaceId) {
+    const membership = await context.entities.WorkspaceUser.findFirst({
+      where: {
+        userId: context.user.id,
+        workspaceId: parentChannel.workspaceId
+      }
+    })
+    if (!membership) {
+      throw new HttpError(403, 'You are not a member of this workspace.')
+    }
+  }
+
+  // Check if a thread channel already exists for this parent message
+  const existingThread = await context.entities.Channel.findFirst({
+    where: {
+      isThread: true,
+      parentMessageId: parentMessage.id
+    }
+  })
+  if (existingThread) {
+    // If it’s linked to a workspace, also confirm membership
+    if (existingThread.workspaceId) {
+      const membership = await context.entities.WorkspaceUser.findFirst({
+        where: {
+          userId: context.user.id,
+          workspaceId: existingThread.workspaceId
+        }
+      })
+      if (!membership) {
+        throw new HttpError(403, 'You are not a member of this workspace.')
+      }
+    }
+
+    return existingThread
+  }
+
+  // Otherwise create a new thread channel
   return context.entities.Channel.create({
     data: {
       name: `Thread on msg #${parentMessageId}`,
-      workspaceId,
+      workspaceId: parentChannel.workspaceId || null,
       isThread: true,
-      parentMessageId,
-    },
+      parentMessageId
+    }
   })
 }
 
@@ -424,16 +466,15 @@ export async function uploadAttachment(
     throw new HttpError(500, 'S3 bucket name not configured')
   }
 
-  // Upload to S3 with public-read ACL
+  // Upload to S3 (no ACL parameter to avoid AccessControlListNotSupported error)
   const command = new PutObjectCommand({
     Bucket: bucketName,
     Key: uniqueKey,
-    Body: buffer,
-    ACL: 'public-read' // <-- Add this to allow public access
+    Body: buffer
   })
   await s3.send(command)
 
-  // Construct a public URL if your bucket is set to public
+  // Construct a public URL if your bucket policy or settings allow public reads
   const s3Url = `https://${bucketName}.s3.amazonaws.com/${uniqueKey}`
 
   // Create Attachment record

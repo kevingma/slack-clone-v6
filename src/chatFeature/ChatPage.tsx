@@ -12,7 +12,7 @@ import {
   removeReaction,
   createThreadChannel,
   getThreadChannel,
-  uploadAttachment // <-- Import the Wasp action for attachments
+  uploadAttachment
 } from 'wasp/client/operations'
 import type { Workspace, User, Reaction, ChatMessage, Channel, Attachment } from 'wasp/entities'
 
@@ -78,14 +78,11 @@ export const ChatPage: FC = () => {
 
   const handleSendMessage = async () => {
     if (!selectedChannelId) return
-    // Prevent sending if there's no message content AND no file
     if (!content.trim() && !selectedFile) return
 
     try {
-      // 1. Create the chat message
       const newMessage = await createChatMessage({ content, channelId: selectedChannelId })
 
-      // 2. If a file is selected, upload it and associate with the new message
       if (selectedFile) {
         const base64 = await fileToBase64(selectedFile)
         await uploadAttachment({
@@ -96,7 +93,6 @@ export const ChatPage: FC = () => {
         setSelectedFile(null)
       }
 
-      // 3. Clear the input, refetch messages
       setContent('')
       refetchMessages()
     } catch (err: any) {
@@ -153,12 +149,8 @@ export const ChatPage: FC = () => {
   }
 
   const handleOpenThread = async (messageId: number) => {
-    if (!selectedWorkspaceId) return
     try {
-      const threadChannel: Channel = await createThreadChannel({
-        parentMessageId: messageId,
-        workspaceId: selectedWorkspaceId
-      })
+      const threadChannel: Channel = await createThreadChannel({ parentMessageId: messageId })
       setSelectedThreadChannelId(threadChannel.id)
     } catch (err: any) {
       window.alert('Error creating/opening thread: ' + err.message)
@@ -319,7 +311,6 @@ export const ChatPage: FC = () => {
                     <div className='bg-white p-2 border border-gray-200'>
                       {msg.content}
                     </div>
-                    {/* Render attachments, if any */}
                     {msg.attachments.length > 0 && (
                       <div className='mt-2 flex gap-2 flex-wrap'>
                         {msg.attachments.map(attachment => (
@@ -379,7 +370,6 @@ export const ChatPage: FC = () => {
 
         {/* Input box pinned at bottom */}
         <div className='p-4 border-t border-gray-300 flex gap-2'>
-          {/* Attachment button/input */}
           <input
             type='file'
             onChange={handleFileChange}
@@ -393,7 +383,6 @@ export const ChatPage: FC = () => {
             Attach
           </label>
 
-          {/* Message input */}
           <input
             className='border p-2 flex-1'
             placeholder='Write a message...'
@@ -421,8 +410,16 @@ export const ChatPage: FC = () => {
       {/* Thread panel (right side) */}
       {selectedThreadChannelId && (
         <div className='w-80 border-l border-gray-300 flex flex-col'>
-          <div className='p-4 border-b border-gray-300'>
+          <div className='p-4 border-b border-gray-300 flex items-center justify-between'>
             <h2 className='text-lg font-bold'>Thread</h2>
+            {/* CLOSE THREAD BUTTON */}
+            <button
+              className='text-gray-700 hover:text-gray-900'
+              onClick={() => setSelectedThreadChannelId(null)}
+              title='Close Thread'
+            >
+              ✕
+            </button>
           </div>
           <div className='flex-1 overflow-y-auto bg-gray-50 p-4 min-h-0'>
             {Array.isArray(threadMessages) &&
@@ -463,7 +460,6 @@ export const ChatPage: FC = () => {
                 </div>
               ))}
           </div>
-          {/* Thread message input */}
           <div className='p-4 border-t border-gray-300 flex gap-2'>
             <input
               className='border p-2 flex-1'
